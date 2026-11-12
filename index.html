@@ -203,11 +203,6 @@ body{margin:0}
     </section>
   </div>
 
-  <section class="panel">
-    <div class="panel-head"><h2>Família Teles</h2><span class="muted small">André fora por lesão · jogos da KNY em que cada um pode entrar</span></div>
-    <div class="fam" id="family"></div>
-  </section>
-
   <div class="grid2">
     <section class="panel">
       <div class="panel-head"><h2>Classificação geral</h2><span class="muted small">games → vitórias → games em jogo</span></div>
@@ -243,11 +238,14 @@ body{margin:0}
   <section class="panel">
     <div class="panel-head"><h2>Tabela completa</h2>
       <div class="filters">
+        <input type="search" id="fSearch" list="athList" placeholder="Buscar atleta, equipe ou categoria" aria-label="Buscar" style="width:auto;min-width:220px;font-size:14px;padding:6px 10px">
+        <datalist id="athList"></datalist>
         <select id="fTeam" aria-label="Equipe"></select>
         <select id="fCatSel" aria-label="Categoria"></select>
         <select id="fState" aria-label="Situação"><option value="">Todos</option><option value="pend">Sem placar</option><option value="done">Com placar</option></select>
       </div>
     </div>
+    <div class="muted small" id="searchInfo" hidden></div>
     <div class="tbl-wrap"><table id="fullTable"></table></div>
   </section>
 
@@ -359,6 +357,7 @@ function validate(cat,n1,n2){
 }
 
 const $=id=>document.getElementById(id);
+const norm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const esc=s=>String(s??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 function opts(sel,list,ph){sel.innerHTML=(ph!=null?`<option value="">${ph}</option>`:"")+list.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("");}
 
@@ -380,7 +379,7 @@ function currentRound(){ const now=Date.now();
   const live=SCHED.find(s=>now>=s.start&&now<s.end); if(live) return live.rd;
   const nx=SCHED.find(s=>s.start>now); return nx?nx.rd:ROUNDS[ROUNDS.length-1]; }
 
-function renderAll(){ renderFamily(); renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderMatrix(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
+function renderAll(){ renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderMatrix(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
 
 function renderScoreboard(){
   $("scoreboard").innerHTML=standings().map((x,i)=>`<div class="team ${x.id==="KNY"?"kny":""}"><span class="pos">${i+1}º</span><span class="name">${esc(TN[x.id])}</span><span class="pts">${x.tot}</span><span class="sub">${x.v}V · ${x.j}/80 jogos${x.bon?` · ${x.bon>0?"+":""}${x.bon} bônus`:""}</span></div>`).join("");
@@ -427,12 +426,18 @@ function renderMatrix(){
   $("knyProg").textContent=`${done} de 80 jogos com placar`; $("knyBar").style.width=(done/80*100).toFixed(1)+"%";
 }
 function renderFull(){
-  const ft=$("fTeam").value, fc=$("fCatSel").value, fs=$("fState").value;
-  const list=SCHED.filter(s=>(!ft||s.a===ft||s.b===ft)&&(!fc||s.cat===fc)&&(!fs||(fs==="done")===has(s.id)));
-  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Turno</th></tr></thead><tbody>`+
+  const ft=$("fTeam").value, fc=$("fCatSel").value, fs=$("fState").value, q=norm($("fSearch").value.trim());
+  const hit=s=>!q||[TN[s.a],TN[s.b],CAT[s.cat].label,CAT[s.cat].short,COURT[s.q],...pairOf(s.id)].some(t=>norm(t).includes(q));
+  const list=SCHED.filter(s=>(!ft||s.a===ft||s.b===ft)&&(!fc||s.cat===fc)&&(!fs||(fs==="done")===has(s.id))&&hit(s));
+  const info=$("searchInfo");
+  if(q){ const athletes=ROSTER.filter(a=>norm(a.n).includes(q)).map(a=>a.n);
+    info.hidden=false;
+    info.textContent=`${list.length} jogo(s) encontrados para "${$("fSearch").value.trim()}"`+(athletes.length&&athletes.length<=3?` · atleta(s): ${athletes.join(", ")} (aparecem os jogos em que estão escalados ou já jogaram)`:"")+(ft?" · filtro de equipe ativo":"");
+  } else info.hidden=true;
+  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Dupla KNY</th><th>Turno</th></tr></thead><tbody>`+
     (list.length?list.map(s=>{ const r=RES[s.id],d=has(s.id),k=s.a==="KNY"||s.b==="KNY";
       let cls=""; if(d&&k){const x=kv(s);cls=x.m>x.t?"w":x.m<x.t?"l":"d";}
-      return `<tr class="click ${k?"knyrow":""}" data-pick="${s.id}"><td>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td>${s.t==="I"?"Ida":"Volta"}</td></tr>`;}).join(""):`<tr><td colspan="8" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
+      return `<tr class="click ${k?"knyrow":""}" data-pick="${s.id}"><td>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted">${esc(pairOf(s.id).join(" / "))}</td><td>${s.t==="I"?"Ida":"Volta"}</td></tr>`;}).join(""):`<tr><td colspan="9" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
 }
 function renderAthletes(){
   const m={};
@@ -550,6 +555,8 @@ $("nextR").addEventListener("click",()=>{viewRound=Math.min(ROUNDS.length,viewRo
 opts($("fTeam"),[["KNY","Só KNY"],["","Todas as equipes"],...TEAMS.filter(t=>t.id!=="KNY").map(t=>[t.id,t.name])]);
 opts($("fCatSel"),[["","Todas as categorias"],...CATS.map(c=>[c.id,c.label])]);
 ["fTeam","fCatSel","fState"].forEach(id=>$(id).addEventListener("change",renderFull));
+$("fSearch").addEventListener("input",()=>{ if($("fSearch").value.trim()&&$("fTeam").value==="KNY") $("fTeam").value=""; renderFull(); });
+$("athList").innerHTML=[...ROSTER.map(a=>a.n),...TEAMS.map(t=>t.name)].map(n=>`<option value="${esc(n)}"></option>`).join("");
 opts($("aTeam"),TEAMS.map(t=>[t.id,t.name]));
 
 /* validador */
