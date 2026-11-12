@@ -133,6 +133,11 @@ tr.xrow>td{white-space:normal;background:var(--surface2);padding:12px}
 .opp ol li span{color:var(--muted);font-variant-numeric:tabular-nums}
 tr.click.open td{background:var(--surface2)}
 .caret{display:inline-block;width:1em;color:var(--muted)}
+.opp li.pk{cursor:pointer;border-radius:4px;padding:1px 4px}
+.opp li.pk:hover{background:var(--surface)}
+.opp li.ch{background:var(--kny);color:#fff;border-radius:4px;padding:1px 4px}
+.opp li.ch span{color:#fff}
+.advsel{font-size:.82rem;margin-bottom:6px}
 .fam{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:860px){.fam{grid-template-columns:minmax(0,1fr)}}
 .fm{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -213,38 +218,6 @@ body{margin:0}
     </section>
   </div>
 
-  <div class="grid2">
-    <section class="panel">
-      <div class="panel-head"><h2>Classificação geral</h2><span class="muted small">games → vitórias → games em jogo</span></div>
-      <div class="tbl-wrap"><table id="standings"></table></div>
-      <details id="adjDetails">
-        <summary class="muted" style="cursor:pointer">Bônus e penalidades fora de jogo</summary>
-        <form id="adjForm" class="edit" style="margin-top:10px">
-          <div class="row">
-            <label>Equipe<select id="aTeam"></select></label>
-            <label>Games (+/−)<input type="number" id="aGames" inputmode="numeric" placeholder="+5"></label>
-          </div>
-          <label>Motivo<select id="aMotivo">
-            <option>Cerimônia de abertura (≥20 integrantes)</option>
-            <option>Equipe mais numerosa na contagem da madrugada</option>
-            <option>Carta especial</option>
-            <option>Penalidade</option>
-            <option>Outro</option>
-          </select></label>
-          <div class="row" style="justify-content:flex-end"><button type="submit" id="adjBtn">Lançar ajuste</button></div>
-        </form>
-        <div id="adjList" style="margin-top:8px"></div>
-      </details>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head"><h2>KNY × adversários</h2><span class="muted small" id="knyProg"></span></div>
-      <div class="prog"><i id="knyBar" style="width:0%"></i></div>
-      <div class="tbl-wrap"><table class="matrix" id="matrix"></table></div>
-      <div class="muted small">Ida e volta de cada confronto, placar do ponto de vista da KNY.</div>
-    </section>
-  </div>
-
   <section class="panel">
     <div class="panel-head"><h2>Tabela completa</h2>
       <div class="filters">
@@ -280,6 +253,29 @@ body{margin:0}
     <div class="panel-head"><h2>Cronograma</h2><span class="muted" id="nextEv"></span></div>
     <div class="timeline" id="timeline"></div>
     <div class="muted small">Horários das pausas conforme a tabela oficial de jogos; refeições e contagem conforme o regulamento.</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Classificação geral</h2><span class="muted small">games → vitórias → games em jogo</span></div>
+    <div class="tbl-wrap"><table id="standings"></table></div>
+    <details id="adjDetails">
+      <summary class="muted" style="cursor:pointer">Bônus e penalidades fora de jogo</summary>
+      <form id="adjForm" class="edit" style="margin-top:10px">
+        <div class="row">
+          <label>Equipe<select id="aTeam"></select></label>
+          <label>Games (+/−)<input type="number" id="aGames" inputmode="numeric" placeholder="+5"></label>
+        </div>
+        <label>Motivo<select id="aMotivo">
+          <option>Cerimônia de abertura (≥20 integrantes)</option>
+          <option>Equipe mais numerosa na contagem da madrugada</option>
+          <option>Carta especial</option>
+          <option>Penalidade</option>
+          <option>Outro</option>
+        </select></label>
+        <div class="row" style="justify-content:flex-end"><button type="submit" id="adjBtn">Lançar ajuste</button></div>
+      </form>
+      <div id="adjList" style="margin-top:8px"></div>
+    </details>
   </section>
 </div>
 
@@ -355,17 +351,18 @@ function possiblePairs(cat,team){
   return {el,pairs:out};
 }
 const tag=(a,cat)=>cat[0]==="P"?String(a.p):a.b;
-function oppBlock(cat,team,showAll){
+function oppBlock(cat,team,showAll,id){
   const {el,pairs}=possiblePairs(cat,team), mx=cat.endsWith("MX"), P=cat[0]==="P";
   const chips=list=>list.map(a=>`<span class="chip">${esc(a.n)} · ${tag(a,cat)}</span>`).join("");
   let athletes;
   if(mx){ const g=(sx,gr)=>el.filter(a=>a.s===sx&&(P?a.pg:a.bg)===gr);
     athletes=[["M","A","Homens · cat. A"],["F","B","Mulheres · cat. B"],["F","A","Mulheres · cat. A"],["M","B","Homens · cat. B"]].map(([sx,gr,l])=>{const L=g(sx,gr);return L.length?`<div class="muted small">${l} (${L.length})</div><div class="chips">${chips(L)}</div>`:"";}).join("");
   } else athletes=`<div class="muted small">${el.length} atletas elegíveis</div><div class="chips">${chips(el)}</div>`;
-  const lim=showAll?pairs.length:10;
-  const list=pairs.length?`<div class="muted small">${pairs.length} duplas possíveis, das mais fortes para as mais fracas${pairs.length>lim?` · mostrando ${lim}`:""}</div><ol>${pairs.slice(0,lim).map(([a,b])=>`<li>${esc(a.n)} + ${esc(b.n)} <span>(${tag(a,cat)}+${tag(b,cat)})</span></li>`).join("")}</ol>${pairs.length>lim?`<button type="button" class="link" data-all="${team}">ver todas as ${pairs.length}</button>`:""}`
+  const lim=showAll?pairs.length:10, chosen=advOf(id,team), isCh=(a,b)=>chosen.length===2&&chosen.includes(a.n)&&chosen.includes(b.n);
+  const chosenLine=chosen.length?`<div class="advsel">Dupla registrada: <b>${esc(chosen.join(" + "))}</b> ${canWrite?`<button type="button" class="link" data-advclear="${team}">limpar</button>`:""}</div>`:`<div class="muted small">${canWrite?"Clique na dupla que entrou em quadra para registrar.":"Entre para registrar a dupla que jogou."}</div>`;
+  const list=pairs.length?`<div class="muted small">${pairs.length} duplas possíveis, das mais fortes para as mais fracas${pairs.length>lim?` · mostrando ${lim}`:""}</div><ol>${pairs.slice(0,lim).map(([a,b])=>`<li class="${canWrite?"pk":""} ${isCh(a,b)?"ch":""}" data-advteam="${team}" data-adva="${esc(a.n)}" data-advb="${esc(b.n)}">${esc(a.n)} + ${esc(b.n)} <span>(${tag(a,cat)}+${tag(b,cat)})</span></li>`).join("")}</ol>${pairs.length>lim?`<button type="button" class="link" data-all="${team}">ver todas as ${pairs.length}</button>`:""}`
     :`<div class="hint bad">Nenhuma dupla válida pela lista oficial — risco de ausência (W.O.).</div>`;
-  return `<div><h4>${esc(TN[team])}</h4>${athletes}${list}</div>`;
+  return `<div><h4>${esc(TN[team])}</h4>${chosenLine}${athletes}${list}<div class="advmsg muted small" data-advmsg="${team}"></div></div>`;
 }
 const FAMILY=[
   {n:"Fernanda Canabarro",note:"Só beach. Na mista, precisa de parceiro D: Cristiano, Davi, Henrique Hartung, Leonardo ou Saher."},
@@ -402,7 +399,8 @@ function opts(sel,list,ph){sel.innerHTML=(ph!=null?`<option value="">${ph}</opti
 let OPEN=null, OPENALL={}, ESC={}, RES={}, ADJ=[], db=null, canWrite=false, EDITORS=[], OWNER="", me=null, loaded=false, selId=null, viewRound=null, userMovedRound=false;
 const has=id=>RES[id]&&Number.isFinite(RES[id].g1)&&Number.isFinite(RES[id].g2);
 const SEED_ESC={j033:["Joaquim Teles","Davi Wergutz"],j059:["Fernanda Canabarro","Henrique Hartung"],j093:["Joaquim Teles","Cristiano Ruschel"],j123:["Carol Pochmann","Fernanda Canabarro"]};
-function pairOf(id){ const r=RES[id]; if(r&&r.dupla&&r.dupla.length) return r.dupla; if(ESC[id]) return ESC[id].dupla||[]; return SEED_ESC[id]||[]; }
+function pairOf(id){ const r=RES[id]; if(r&&r.dupla&&r.dupla.length) return r.dupla; if(ESC[id]&&ESC[id].dupla) return ESC[id].dupla; return SEED_ESC[id]||[]; }
+const advOf=(id,t)=>(ESC[id]&&ESC[id].adv&&ESC[id].adv[t])||[];
 function kv(s){ const r=RES[s.id]; if(s.a==="KNY") return {opp:s.b,m:r?.g1,t:r?.g2}; if(s.b==="KNY") return {opp:s.a,m:r?.g2,t:r?.g1}; return null; }
 
 function standings(){
@@ -418,7 +416,7 @@ function currentRound(){ const now=Date.now();
   const live=SCHED.find(s=>now>=s.start&&now<s.end); if(live) return live.rd;
   const nx=SCHED.find(s=>s.start>now); return nx?nx.rd:ROUNDS[ROUNDS.length-1]; }
 
-function renderAll(){ renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderMatrix(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
+function renderAll(){ renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
 
 function renderScoreboard(){
   $("scoreboard").innerHTML=standings().map((x,i)=>`<div class="team ${x.id==="KNY"?"kny":""}"><span class="pos">${i+1}º</span><span class="name">${esc(TN[x.id])}</span><span class="pts">${x.tot}</span><span class="sub">${x.v}V · ${x.j}/80 jogos${x.bon?` · ${x.bon>0?"+":""}${x.bon} bônus`:""}</span></div>`).join("");
@@ -464,21 +462,25 @@ function renderMatrix(){
   $("matrix").innerHTML=`<thead><tr><th>Categoria</th>${opps.map(o=>`<th style="text-align:center">${esc(o.name)}</th>`).join("")}<th class="r">Games</th></tr></thead><tbody>${rows}</tbody>`;
   $("knyProg").textContent=`${done} de 80 jogos com placar`; $("knyBar").style.width=(done/80*100).toFixed(1)+"%";
 }
+function duplasCell(s){ const k=s.a==="KNY"||s.b==="KNY", parts=[];
+  if(k){ const p=pairOf(s.id); if(p.length) parts.push(`KNY: ${esc(p.join(" / "))}`); const o=s.a==="KNY"?s.b:s.a, a=advOf(s.id,o); if(a.length) parts.push(`${esc(TN[o])}: ${esc(a.join(" / "))}`); }
+  else for(const t of [s.a,s.b]){ const a=advOf(s.id,t); if(a.length) parts.push(`${esc(TN[t])}: ${esc(a.join(" / "))}`); }
+  return parts.join("<br>"); }
 function renderFull(){
   const ft=$("fTeam").value, fc=$("fCatSel").value, fs=$("fState").value, q=norm($("fSearch").value.trim());
-  const hit=s=>!q||[TN[s.a],TN[s.b],CAT[s.cat].label,CAT[s.cat].short,COURT[s.q],...pairOf(s.id)].some(t=>norm(t).includes(q));
+  const hit=s=>!q||[TN[s.a],TN[s.b],CAT[s.cat].label,CAT[s.cat].short,COURT[s.q],...pairOf(s.id),...advOf(s.id,s.a),...advOf(s.id,s.b)].some(t=>norm(t).includes(q));
   const list=SCHED.filter(s=>(!ft||s.a===ft||s.b===ft)&&(!fc||s.cat===fc)&&(!fs||(fs==="done")===has(s.id))&&hit(s));
   const info=$("searchInfo");
   if(q){ const athletes=ROSTER.filter(a=>norm(a.n).includes(q)).map(a=>a.n);
     info.hidden=false;
     info.textContent=`${list.length} jogo(s) encontrados para "${$("fSearch").value.trim()}"`+(athletes.length&&athletes.length<=3?` · atleta(s): ${athletes.join(", ")} (aparecem os jogos em que estão escalados ou já jogaram)`:"")+(ft?" · filtro de equipe ativo":"");
   } else info.hidden=true;
-  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Dupla KNY</th><th>Turno</th></tr></thead><tbody>`+
+  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Duplas</th><th>Turno</th></tr></thead><tbody>`+
     (list.length?list.map(s=>{ const r=RES[s.id],d=has(s.id),k=s.a==="KNY"||s.b==="KNY";
       let cls=""; if(d&&k){const x=kv(s);cls=x.m>x.t?"w":x.m<x.t?"l":"d";}
       const open=OPEN===s.id, teams=k?[s.a==="KNY"?s.b:s.a]:[s.a,s.b];
-      const xrow=open?`<tr class="xrow"><td colspan="9"><div class="muted small" style="margin-bottom:8px">${k?"Possíveis duplas adversárias":"Possíveis duplas"} em ${esc(CAT[s.cat].label)}, pela lista oficial de inscritos e pelas regras da categoria (${esc(CAT[s.cat].rule)})</div><div class="opp">${teams.map(t=>oppBlock(s.cat,t,OPENALL[s.id+t])).join("")}</div></td></tr>`:"";
-      return `<tr class="click ${k?"knyrow":""} ${open?"open":""}" data-pick="${s.id}" data-x="${s.id}"><td><span class="caret">${open?"▾":"▸"}</span>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted">${esc(pairOf(s.id).join(" / "))}</td><td>${s.t==="I"?"Ida":"Volta"}</td></tr>${xrow}`;}).join(""):`<tr><td colspan="9" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
+      const xrow=open?`<tr class="xrow"><td colspan="9"><div class="muted small" style="margin-bottom:8px">${k?"Possíveis duplas adversárias":"Possíveis duplas"} em ${esc(CAT[s.cat].label)}, pela lista oficial de inscritos e pelas regras da categoria (${esc(CAT[s.cat].rule)})</div><div class="opp">${teams.map(t=>oppBlock(s.cat,t,OPENALL[s.id+t],s.id)).join("")}</div></td></tr>`:"";
+      return `<tr class="click ${k?"knyrow":""} ${open?"open":""}" data-pick="${s.id}" data-x="${s.id}"><td><span class="caret">${open?"▾":"▸"}</span>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted small" style="white-space:normal;min-width:160px">${duplasCell(s)}</td><td>${s.t==="I"?"Ida":"Volta"}</td></tr>${xrow}`;}).join(""):`<tr><td colspan="9" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
 }
 function renderAthletes(){
   const m={};
@@ -556,6 +558,12 @@ function pick(id){ selId=id; renderRounds(); renderSel(); msg("");
 function msg(t,cls){const m=$("formMsg");m.hidden=!t;m.className="hint "+(cls||"");m.textContent=t||"";}
 
 document.addEventListener("click",async e=>{
+  const li=e.target.closest("li[data-advteam]"); if(li){ const id=li.closest("tr.xrow").previousElementSibling.dataset.x, t=li.dataset.advteam;
+    if(!canWrite||!db){ const m=li.closest("div").querySelector("[data-advmsg]"); if(m) m.textContent="Entre com sua conta para registrar."; return; }
+    try{ await db.collection("escalacao").doc(id).set({adv:{[t]:[li.dataset.adva,li.dataset.advb]},ts:Date.now()},{merge:true}); }catch(_){ const m=li.closest("div").querySelector("[data-advmsg]"); if(m) m.textContent="Não consegui registrar agora."; }
+    return; }
+  const clr=e.target.closest("[data-advclear]"); if(clr&&db){ const id=clr.closest("tr.xrow").previousElementSibling.dataset.x;
+    try{ await db.collection("escalacao").doc(id).set({adv:{[clr.dataset.advclear]:firebase.firestore.FieldValue.delete()}},{merge:true}); }catch(_){} return; }
   const all=e.target.closest("[data-all]"); if(all){ const id=all.closest("tr.xrow").previousElementSibling.dataset.x; OPENALL[id+all.dataset.all]=true; renderFull(); return; }
   const x=e.target.closest("tr[data-x]"); if(x){ const id=x.dataset.x; OPEN=OPEN===id?null:id; selId=id; renderRounds(); renderSel(); msg(""); renderFull(); return; }
   const p=e.target.closest("[data-pick]"); if(p){pick(p.dataset.pick);return;}
@@ -583,7 +591,7 @@ $("saveEsc").addEventListener("click",async()=>{
   if(!db||!selId) return; const s=SID[selId];
   const dupla=[$("fP1").value,$("fP2").value].filter(Boolean);
   const errs=pairIssues(s,$("fP1").value,$("fP2").value); if(errs.length){ msg("Não salvei: "+errs.join(" "),"bad"); return; }
-  try{ await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now()});
+  try{ await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now()},{merge:true});
     msg(dupla.length?`Escalação salva: ${dupla.join(" / ")} · ${CAT[s.cat].short}, ${s.ini}.`:"Escalação removida.","ok");
   }catch(_){ msg("Não consegui salvar a escalação agora.","bad"); }
 });
@@ -684,7 +692,7 @@ function applyAuth(){
     const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={g1:x.g1,g2:x.g2,obs:x.obs,dupla:[...(x.dupla||[])]}; }
     RES=o; loaded=true; clearTimeout(timer); stamp(); renderAll();
   },()=>{ $("status").textContent="Conexão com o placar interrompida. Recarregue a página."; });
-  db.collection("escalacao").onSnapshot(snap=>{ const o={}; for(const d of snap.docs) o[d.id]={dupla:[...(d.data().dupla||[])]}; ESC=o; renderAll(); },()=>{});
+  db.collection("escalacao").onSnapshot(snap=>{ const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={dupla:Array.isArray(x.dupla)?[...x.dupla]:null, adv:Object.fromEntries(Object.entries(x.adv||{}).map(([t,v])=>[t,[...v]]))}; } ESC=o; renderAll(); },()=>{});
   db.collection("ajustes").onSnapshot(snap=>{ ADJ=snap.docs.map(d=>({id:d.id,...d.data()})); renderScoreboard(); renderStandings(); renderAdj(); },()=>{});
 })();
 })();
