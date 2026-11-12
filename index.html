@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Maratona das Raquetes 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: placar no topo; "agora na quadra" + lançamento; classificação; grade KNY; tabela completa; validador; cronograma. Uma coluna no celular. */
+:root{
+  --bg:#eef2f4; --surface:#ffffff; --surface2:#e3e9ed; --line:#cdd6dc;
+  --fg:#13232d; --muted:#5b6b75;
+  --padel:#1d5c8f; --beach:#b9772a; --kny:#0e7a6a; --knysoft:#dcefeb;
+  --win:#1f8a4c; --loss:#b4413a; --draw:#8a7a2a;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171c; --surface:#16222a; --surface2:#1e2d36; --line:#2c3d48;
+  --fg:#e3ebef; --muted:#93a4ae;
+  --padel:#5a9fd6; --beach:#e0a35a; --kny:#3cc3ad; --knysoft:#173a36;
+  --win:#4cc27e; --loss:#e3756d; --draw:#d2c063; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171c; --surface:#16222a; --surface2:#1e2d36; --line:#2c3d48;
+  --fg:#e3ebef; --muted:#93a4ae;
+  --padel:#5a9fd6; --beach:#e0a35a; --kny:#3cc3ad; --knysoft:#173a36;
+  --win:#4cc27e; --loss:#e3756d; --draw:#d2c063; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:2.1rem;line-height:1}
+h2{font-size:1.35rem;text-transform:uppercase;letter-spacing:.04em}
+h3{font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .small{font-size:.78rem}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
+.status{font-size:.8rem;color:var(--muted)} .status b{color:var(--fg)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+section.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+
+.scoreboard{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.scoreboard .team:first-child{grid-column:1/-1}}
+.team{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.team.kny{border-color:var(--kny);box-shadow:inset 0 0 0 1px var(--kny)}
+.team .pos{font-family:var(--display);font-size:.95rem;color:var(--muted)}
+.team .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team.kny .name{color:var(--kny)}
+.team .pts{font-family:var(--display);font-size:2.2rem;line-height:1;font-variant-numeric:tabular-nums}
+.team .sub{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* cartões de jogo */
+.round{display:flex;flex-direction:column;gap:8px}
+.round-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.round-head .t{font-family:var(--display);font-size:1.15rem;font-weight:600}
+.courts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:420px){.courts{grid-template-columns:minmax(0,1fr)}}
+.match{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;min-width:0;background:var(--surface)}
+.match:focus-visible{outline:2px solid var(--kny);outline-offset:1px}
+.match:hover{border-color:var(--muted)}
+.match.kny{background:var(--knysoft);border-color:var(--kny)}
+.match.sel{outline:2px solid var(--kny)}
+.match .top{display:flex;justify-content:space-between;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.match .top .p{color:var(--padel)} .match .top .b{color:var(--beach)}
+.match .vs{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center}
+.match .tn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.match .tn.k{color:var(--kny);font-weight:700}
+.match .sc{font-family:var(--display);font-size:1.15rem;font-variant-numeric:tabular-nums;text-align:right;min-width:1.4em}
+.match .sc.w{color:var(--win)}
+.match .pair{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* formulário */
+form{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>label{flex:1 1 140px;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:600;color:var(--muted)}
+select,input{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+input[type=number]{font-family:var(--display);font-size:1.8rem;text-align:center;padding:4px 6px}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--kny);outline-offset:1px}
+.score-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:end}
+.score-row .x{font-family:var(--display);font-size:1.5rem;color:var(--muted);padding-bottom:10px}
+.score-row label span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);padding:9px 14px;cursor:pointer}
+button.primary{background:var(--kny);border-color:var(--kny);color:#fff}
+button.danger{color:var(--loss)}
+button.link{background:none;border:none;padding:2px 4px;color:var(--muted);font-weight:500;text-decoration:underline}
+button:disabled{opacity:.5;cursor:not-allowed}
+.hint{font-size:.8rem;padding:8px 10px;border-radius:8px;background:var(--surface2)}
+.hint.ok{color:var(--win)} .hint.bad{color:var(--loss)} .hint.warn{color:var(--draw)}
+.sel-game{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px}
+.sel-game .big{font-family:var(--display);font-size:1.25rem;font-weight:600}
+
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+td.r,th.r{text-align:right} td.c,th.c{text-align:center}
+tr.kny td{color:var(--kny);font-weight:600}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface2)}
+tr.knyrow td:first-child{box-shadow:inset 3px 0 0 var(--kny)}
+.matrix td{text-align:center;padding:5px 4px}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.mod{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.mod.p{background:var(--padel)} .mod.b{background:var(--beach)}
+.slot{display:inline-block;min-width:44px;padding:2px 4px;border-radius:5px;font-family:var(--display);font-size:1rem;border:1px dashed var(--line);color:var(--muted)}
+.slot.w{border:1px solid var(--win);color:var(--win)} .slot.l{border:1px solid var(--loss);color:var(--loss)} .slot.d{border:1px solid var(--draw);color:var(--draw)}
+.prog{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.prog>i{display:block;height:100%;background:var(--kny)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters select{width:auto;font-size:14px;padding:6px 8px}
+.res.w{color:var(--win)} .res.l{color:var(--loss)} .res.d{color:var(--draw)}
+.res{font-family:var(--display);font-size:1.1rem}
+.adj{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.timeline{display:flex;flex-direction:column}
+.tl{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;padding:6px 0 6px 12px;border-left:2px solid var(--line);position:relative}
+.tl::before{content:"";position:absolute;left:-6px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--line)}
+.tl.past{color:var(--muted)} .tl.past::before{background:var(--line)}
+.tl.next{font-weight:600} .tl.next::before{background:var(--kny);border-color:var(--kny)}
+.tl time{font-family:var(--display);font-size:1.05rem}
+.empty{padding:14px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px}
+.pill{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.k{background:var(--kny);color:#fff}
+.fam{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.fam{grid-template-columns:minmax(0,1fr)}}
+.fm{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fm .nm{font-family:var(--display);font-size:1.3rem;font-weight:700;line-height:1}
+.fm .chips{display:flex;flex-wrap:wrap;gap:4px}
+.fm .stat{display:flex;gap:14px;font-variant-numeric:tabular-nums}
+.fm .stat b{font-family:var(--display);font-size:1.4rem;display:block;line-height:1}
+.fm ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.fm li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:6px;font-size:.8rem;padding:3px 0;border-bottom:1px solid var(--line)}
+.fm li .tm{font-family:var(--display);font-size:.95rem}
+.fm li.clash .tm{color:var(--draw)}
+.fm li.played{color:var(--muted)}
+.fm li.esc{background:var(--knysoft);border-radius:4px;padding:4px}
+.fm li .pill{align-self:start}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+body{margin:0}
+.authbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.ro .edit{display:none!important}
+.editors{display:flex;flex-direction:column;gap:6px}
+.editors .e{display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:4px 0;font-size:.85rem;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Smart Sports Center · 13–14/11/2026 · 200 jogos em 50 rodadas</div>
+      <h1>Maratona das Raquetes 2026</h1>
+    </div>
+    <div class="authbar">
+      <div class="status" id="status">Conectando ao placar…</div>
+      <span class="muted small" id="who"></span>
+      <button type="button" id="loginBtn" hidden>Entrar para lançar</button>
+      <button type="button" class="link" id="logoutBtn" hidden>sair</button>
+    </div>
+  </header>
+
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2 id="nowTitle">Agora na quadra</h2>
+        <div class="filters">
+          <button type="button" id="prevR" aria-label="Rodada anterior">‹</button>
+          <select id="roundSel" aria-label="Rodada"></select>
+          <button type="button" id="nextR" aria-label="Próxima rodada">›</button>
+        </div>
+      </div>
+      <div id="rounds" class="round"></div>
+      <div class="muted small">Toque num jogo para lançar o placar. Jogos da KNY ficam em verde.</div>
+    </section>
+
+    <section class="panel" id="formPanel">
+      <div class="panel-head"><h2 id="formH">Lançar resultado</h2><span class="pill" id="formTag"></span></div>
+      <form id="gameForm" autocomplete="off">
+        <div class="sel-game" id="selGame"><span class="muted">Escolha um jogo ao lado ou na tabela completa.</span></div>
+        <div class="score-row edit">
+          <label><span id="lbl1">Equipe 1</span><input type="number" id="fG1" inputmode="numeric" min="-20" max="40" placeholder="–"></label>
+          <span class="x">×</span>
+          <label><span id="lbl2">Equipe 2</span><input type="number" id="fG2" inputmode="numeric" min="-20" max="40" placeholder="–"></label>
+        </div>
+        <div class="row edit" id="pairRow" hidden>
+          <label>Atleta KNY 1<select id="fP1"></select></label>
+          <label>Atleta KNY 2<select id="fP2"></select></label>
+        </div>
+        <div class="hint" id="pairHint" hidden></div>
+        <label class="edit">Observação<input type="text" id="fObs" placeholder="carta especial, atraso, penalidade…"></label>
+        <div class="row edit" style="justify-content:flex-end;align-items:center">
+          <button type="button" class="link" id="clearRes" hidden>apagar placar</button>
+          <button type="button" id="saveEsc" hidden>Salvar só a escalação</button>
+          <button type="submit" class="primary" id="saveBtn" disabled>Salvar placar</button>
+        </div>
+        <div class="hint" id="formMsg" hidden></div>
+      </form>
+      <h3 style="margin-top:4px">Próximos jogos da KNY</h3>
+      <div class="tbl-wrap"><table id="knyNext"></table></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Família Teles</h2><span class="muted small">André fora por lesão · jogos da KNY em que cada um pode entrar</span></div>
+    <div class="fam" id="family"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2>Classificação geral</h2><span class="muted small">games → vitórias → games em jogo</span></div>
+      <div class="tbl-wrap"><table id="standings"></table></div>
+      <details id="adjDetails">
+        <summary class="muted" style="cursor:pointer">Bônus e penalidades fora de jogo</summary>
+        <form id="adjForm" class="edit" style="margin-top:10px">
+          <div class="row">
+            <label>Equipe<select id="aTeam"></select></label>
+            <label>Games (+/−)<input type="number" id="aGames" inputmode="numeric" placeholder="+5"></label>
+          </div>
+          <label>Motivo<select id="aMotivo">
+            <option>Cerimônia de abertura (≥20 integrantes)</option>
+            <option>Equipe mais numerosa na contagem da madrugada</option>
+            <option>Carta especial</option>
+            <option>Penalidade</option>
+            <option>Outro</option>
+          </select></label>
+          <div class="row" style="justify-content:flex-end"><button type="submit" id="adjBtn">Lançar ajuste</button></div>
+        </form>
+        <div id="adjList" style="margin-top:8px"></div>
+      </details>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>KNY × adversários</h2><span class="muted small" id="knyProg"></span></div>
+      <div class="prog"><i id="knyBar" style="width:0%"></i></div>
+      <div class="tbl-wrap"><table class="matrix" id="matrix"></table></div>
+      <div class="muted small">Ida e volta de cada confronto, placar do ponto de vista da KNY.</div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Tabela completa</h2>
+      <div class="filters">
+        <select id="fTeam" aria-label="Equipe"></select>
+        <select id="fCatSel" aria-label="Categoria"></select>
+        <select id="fState" aria-label="Situação"><option value="">Todos</option><option value="pend">Sem placar</option><option value="done">Com placar</option></select>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table id="fullTable"></table></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2>Validador de dupla KNY</h2></div>
+      <label>Categoria<select id="vCat"></select></label>
+      <div class="row">
+        <label>Atleta 1<select id="vP1"></select></label>
+        <label>Atleta 2<select id="vP2"></select></label>
+      </div>
+      <div class="hint" id="vHint">Escolha os dois atletas.</div>
+      <div class="muted small" id="vRule"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Atletas KNY em quadra</h2></div>
+      <div class="tbl-wrap"><table id="athletes"></table></div>
+    </section>
+  </div>
+
+  <section class="panel" id="adminPanel" hidden>
+    <div class="panel-head"><h2>Quem pode lançar</h2><span class="muted small">só você vê esta seção</span></div>
+    <div class="editors" id="editorList"></div>
+    <form id="editorForm" class="row"><label style="flex:3 1 220px">E-mail Google<input type="email" id="edEmail" placeholder="nome@gmail.com"></label><div style="display:flex;align-items:flex-end"><button type="submit">Adicionar</button></div></form>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Cronograma</h2><span class="muted" id="nextEv"></span></div>
+    <div class="timeline" id="timeline"></div>
+    <div class="muted small">Horários das pausas conforme a tabela oficial de jogos; refeições e contagem conforme o regulamento.</div>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const FIREBASE_CONFIG={apiKey:"AIzaSyAghPnzC51G3FL1YGfUTmDdrxqjI6Tn0Zg",authDomain:"maratona-raquetes-kny.firebaseapp.com",projectId:"maratona-raquetes-kny",storageBucket:"maratona-raquetes-kny.firebasestorage.app",messagingSenderId:"810879186477",appId:"1:810879186477:web:b6628da3da3bcf73612aa4"};
+</script>
+<script>
+(function(){
+"use strict";
+// Tabela oficial: [rodada, início, fim, categoria, quadra, equipe1, equipe2, turno(I/V)]
+const RAW=[[1,"20:30","20:54","P-FA","P2","SAN","SOV","I"],[1,"20:30","20:54","P-FA","P1","LOB","BRA","I"],[1,"20:30","20:54","B-FA","B2","KNY","SOV","I"],[1,"20:30","20:54","B-FA","B3","SAN","LOB","I"],[2,"20:54","21:18","P-MA","P2","KNY","SOV","I"],[2,"20:54","21:18","P-MA","P1","SAN","LOB","I"],[2,"20:54","21:18","B-MA","B2","KNY","BRA","I"],[2,"20:54","21:18","B-MA","B3","SOV","LOB","I"],[3,"21:18","21:42","P-FB","P1","KNY","BRA","I"],[3,"21:18","21:42","P-FB","P2","SOV","LOB","I"],[3,"21:18","21:42","B-FB","B3","KNY","LOB","I"],[3,"21:18","21:42","B-FB","B2","BRA","SAN","I"],[4,"21:42","22:06","P-MB","P1","KNY","LOB","I"],[4,"21:42","22:06","P-MB","P2","BRA","SAN","I"],[4,"21:42","22:06","B-MB","B2","KNY","SAN","I"],[4,"21:42","22:06","B-MB","B3","BRA","SOV","I"],[5,"22:06","22:30","P-MX","P1","KNY","SAN","I"],[5,"22:06","22:30","P-MX","P2","BRA","SOV","I"],[5,"22:06","22:30","B-MX","B3","SAN","SOV","I"],[5,"22:06","22:30","B-MX","B2","LOB","BRA","I"],[6,"22:30","22:54","P-FA","P1","KNY","SOV","I"],[6,"22:30","22:54","P-FA","P2","SAN","LOB","I"],[6,"22:30","22:54","B-FA","B3","KNY","BRA","I"],[6,"22:30","22:54","B-FA","B2","SOV","LOB","I"],[7,"22:54","23:18","P-MA","P1","KNY","BRA","I"],[7,"22:54","23:18","P-MA","P2","SOV","LOB","I"],[7,"22:54","23:18","B-MA","B2","KNY","LOB","I"],[7,"22:54","23:18","B-MA","B3","BRA","SAN","I"],[8,"23:18","23:42","P-FB","P1","KNY","LOB","I"],[8,"23:18","23:42","P-FB","P2","BRA","SAN","I"],[8,"23:18","23:42","B-FB","B3","KNY","SAN","I"],[8,"23:18","23:42","B-FB","B2","BRA","SOV","I"],[9,"23:42","00:06","P-MB","P1","KNY","SAN","I"],[9,"23:42","00:06","P-MB","P2","BRA","SOV","I"],[9,"23:42","00:06","B-MB","B3","SAN","SOV","I"],[9,"23:42","00:06","B-MB","B2","LOB","BRA","I"],[10,"00:36","01:00","P-MX","P1","SAN","SOV","I"],[10,"00:36","01:00","P-MX","P2","LOB","BRA","I"],[10,"00:36","01:00","B-MX","B2","KNY","SOV","I"],[10,"00:36","01:00","B-MX","B3","SAN","LOB","I"],[11,"01:00","01:24","P-FA","P2","KNY","BRA","I"],[11,"01:00","01:24","P-FA","P1","SOV","LOB","I"],[11,"01:00","01:24","B-FA","B3","KNY","LOB","I"],[11,"01:00","01:24","B-FA","B2","BRA","SAN","I"],[12,"01:24","01:48","P-MA","P1","KNY","LOB","I"],[12,"01:24","01:48","P-MA","P2","BRA","SAN","I"],[12,"01:24","01:48","B-MA","B3","KNY","SAN","I"],[12,"01:24","01:48","B-MA","B2","BRA","SOV","I"],[13,"01:48","02:12","P-FB","P1","KNY","SAN","I"],[13,"01:48","02:12","P-FB","P2","BRA","SOV","I"],[13,"01:48","02:12","B-FB","B3","SAN","SOV","I"],[13,"01:48","02:12","B-FB","B2","LOB","BRA","I"],[14,"02:12","02:36","P-MB","P1","SAN","SOV","I"],[14,"02:12","02:36","P-MB","P2","LOB","BRA","I"],[14,"02:12","02:36","B-MB","B2","KNY","SOV","I"],[14,"02:12","02:36","B-MB","B3","SAN","LOB","I"],[15,"02:36","03:00","P-MX","P1","KNY","SOV","I"],[15,"02:36","03:00","P-MX","P2","SAN","LOB","I"],[15,"02:36","03:00","B-MX","B2","KNY","BRA","I"],[15,"02:36","03:00","B-MX","B3","SOV","LOB","I"],[16,"03:00","03:24","P-FA","P2","KNY","LOB","I"],[16,"03:00","03:24","P-FA","P1","BRA","SAN","I"],[16,"03:00","03:24","B-FA","B3","KNY","SAN","I"],[16,"03:00","03:24","B-FA","B2","BRA","SOV","I"],[17,"03:54","04:18","P-MA","P1","KNY","SAN","I"],[17,"03:54","04:18","P-MA","P2","BRA","SOV","I"],[17,"03:54","04:18","B-MA","B2","SAN","SOV","I"],[17,"03:54","04:18","B-MA","B3","LOB","BRA","I"],[18,"04:18","04:42","P-FB","P1","SAN","SOV","I"],[18,"04:18","04:42","P-FB","P2","LOB","BRA","I"],[18,"04:18","04:42","B-FB","B2","KNY","SOV","I"],[18,"04:18","04:42","B-FB","B3","SAN","LOB","I"],[19,"04:42","05:06","P-MB","P2","KNY","SOV","I"],[19,"04:42","05:06","P-MB","P1","SAN","LOB","I"],[19,"04:42","05:06","B-MB","B2","KNY","BRA","I"],[19,"04:42","05:06","B-MB","B3","SOV","LOB","I"],[20,"05:06","05:30","P-MX","P2","KNY","BRA","I"],[20,"05:06","05:30","P-MX","P1","SOV","LOB","I"],[20,"05:06","05:30","B-MX","B3","KNY","LOB","I"],[20,"05:06","05:30","B-MX","B2","BRA","SAN","I"],[21,"05:30","05:54","P-FA","P2","KNY","SAN","I"],[21,"05:30","05:54","P-FA","P1","BRA","SOV","I"],[21,"05:30","05:54","B-FA","B2","SAN","SOV","I"],[21,"05:30","05:54","B-FA","B3","LOB","BRA","I"],[22,"05:54","06:18","P-MA","P1","SAN","SOV","I"],[22,"05:54","06:18","P-MA","P2","LOB","BRA","I"],[22,"05:54","06:18","B-MA","B3","KNY","SOV","I"],[22,"05:54","06:18","B-MA","B2","SAN","LOB","I"],[23,"06:48","07:12","P-FB","P2","KNY","SOV","I"],[23,"06:48","07:12","P-FB","P1","SAN","LOB","I"],[23,"06:48","07:12","B-FB","B3","KNY","BRA","I"],[23,"06:48","07:12","B-FB","B2","SOV","LOB","I"],[24,"07:12","07:36","P-MB","P2","KNY","BRA","I"],[24,"07:12","07:36","P-MB","P1","SOV","LOB","I"],[24,"07:12","07:36","B-MB","B2","KNY","LOB","I"],[24,"07:12","07:36","B-MB","B3","BRA","SAN","I"],[25,"07:36","08:00","P-MX","P1","KNY","LOB","I"],[25,"07:36","08:00","P-MX","P2","BRA","SAN","I"],[25,"07:36","08:00","B-MX","B3","KNY","SAN","I"],[25,"07:36","08:00","B-MX","B2","BRA","SOV","I"],[26,"08:00","08:24","P-FA","P2","SOV","SAN","V"],[26,"08:00","08:24","P-FA","P1","BRA","LOB","V"],[26,"08:00","08:24","B-FA","B3","SOV","KNY","V"],[26,"08:00","08:24","B-FA","B2","LOB","SAN","V"],[27,"08:24","08:48","P-MA","P2","SOV","KNY","V"],[27,"08:24","08:48","P-MA","P1","LOB","SAN","V"],[27,"08:24","08:48","B-MA","B2","BRA","KNY","V"],[27,"08:24","08:48","B-MA","B3","LOB","SOV","V"],[28,"08:48","09:12","P-FB","P2","BRA","KNY","V"],[28,"08:48","09:12","P-FB","P1","LOB","SOV","V"],[28,"08:48","09:12","B-FB","B2","LOB","KNY","V"],[28,"08:48","09:12","B-FB","B3","SAN","BRA","V"],[29,"09:12","09:36","P-MB","P2","LOB","KNY","V"],[29,"09:12","09:36","P-MB","P1","SAN","BRA","V"],[29,"09:12","09:36","B-MB","B2","SAN","KNY","V"],[29,"09:12","09:36","B-MB","B3","SOV","BRA","V"],[30,"09:36","10:00","P-MX","P2","SAN","KNY","V"],[30,"09:36","10:00","P-MX","P1","SOV","BRA","V"],[30,"09:36","10:00","B-MX","B2","SOV","SAN","V"],[30,"09:36","10:00","B-MX","B3","BRA","LOB","V"],[31,"10:00","10:24","P-FA","P1","SOV","KNY","V"],[31,"10:00","10:24","P-FA","P2","LOB","SAN","V"],[31,"10:00","10:24","B-FA","B3","BRA","KNY","V"],[31,"10:00","10:24","B-FA","B2","LOB","SOV","V"],[32,"10:24","10:48","P-MA","P2","BRA","KNY","V"],[32,"10:24","10:48","P-MA","P1","LOB","SOV","V"],[32,"10:24","10:48","B-MA","B2","LOB","KNY","V"],[32,"10:24","10:48","B-MA","B3","SAN","BRA","V"],[33,"10:48","11:12","P-FB","P2","LOB","KNY","V"],[33,"10:48","11:12","P-FB","P1","SAN","BRA","V"],[33,"10:48","11:12","B-FB","B2","SAN","KNY","V"],[33,"10:48","11:12","B-FB","B3","SOV","BRA","V"],[34,"11:12","11:36","P-MB","P2","SAN","KNY","V"],[34,"11:12","11:36","P-MB","P1","SOV","BRA","V"],[34,"11:12","11:36","B-MB","B3","SOV","SAN","V"],[34,"11:12","11:36","B-MB","B2","BRA","LOB","V"],[35,"11:36","12:00","P-MX","P1","SOV","SAN","V"],[35,"11:36","12:00","P-MX","P2","BRA","LOB","V"],[35,"11:36","12:00","B-MX","B2","SOV","KNY","V"],[35,"11:36","12:00","B-MX","B3","LOB","SAN","V"],[36,"12:30","12:54","P-FA","P1","BRA","KNY","V"],[36,"12:30","12:54","P-FA","P2","LOB","SOV","V"],[36,"12:30","12:54","B-FA","B3","LOB","KNY","V"],[36,"12:30","12:54","B-FA","B2","SAN","BRA","V"],[37,"12:54","13:18","P-MA","P2","LOB","KNY","V"],[37,"12:54","13:18","P-MA","P1","SAN","BRA","V"],[37,"12:54","13:18","B-MA","B3","SAN","KNY","V"],[37,"12:54","13:18","B-MA","B2","SOV","BRA","V"],[38,"13:18","13:42","P-FB","P1","SAN","KNY","V"],[38,"13:18","13:42","P-FB","P2","SOV","BRA","V"],[38,"13:18","13:42","B-FB","B2","SOV","SAN","V"],[38,"13:18","13:42","B-FB","B3","BRA","LOB","V"],[39,"13:42","14:06","P-MB","P2","SOV","SAN","V"],[39,"13:42","14:06","P-MB","P1","BRA","LOB","V"],[39,"13:42","14:06","B-MB","B3","SOV","KNY","V"],[39,"13:42","14:06","B-MB","B2","LOB","SAN","V"],[40,"14:06","14:30","P-MX","P1","SOV","KNY","V"],[40,"14:06","14:30","P-MX","P2","LOB","SAN","V"],[40,"14:06","14:30","B-MX","B2","BRA","KNY","V"],[40,"14:06","14:30","B-MX","B3","LOB","SOV","V"],[41,"14:30","14:54","P-FA","P1","LOB","KNY","V"],[41,"14:30","14:54","P-FA","P2","SAN","BRA","V"],[41,"14:30","14:54","B-FA","B2","SAN","KNY","V"],[41,"14:30","14:54","B-FA","B3","SOV","BRA","V"],[42,"14:54","15:18","P-MA","P2","SAN","KNY","V"],[42,"14:54","15:18","P-MA","P1","SOV","BRA","V"],[42,"14:54","15:18","B-MA","B3","SOV","SAN","V"],[42,"14:54","15:18","B-MA","B2","BRA","LOB","V"],[43,"15:18","15:42","P-FB","P2","SOV","SAN","V"],[43,"15:18","15:42","P-FB","P1","BRA","LOB","V"],[43,"15:18","15:42","B-FB","B3","SOV","KNY","V"],[43,"15:18","15:42","B-FB","B2","LOB","SAN","V"],[44,"15:42","16:06","P-MB","P1","SOV","KNY","V"],[44,"15:42","16:06","P-MB","P2","LOB","SAN","V"],[44,"15:42","16:06","B-MB","B3","BRA","KNY","V"],[44,"15:42","16:06","B-MB","B2","LOB","SOV","V"],[45,"16:36","17:00","P-MX","P1","BRA","KNY","V"],[45,"16:36","17:00","P-MX","P2","LOB","SOV","V"],[45,"16:36","17:00","B-MX","B3","LOB","KNY","V"],[45,"16:36","17:00","B-MX","B2","SAN","BRA","V"],[46,"17:00","17:24","P-FA","P2","SAN","KNY","V"],[46,"17:00","17:24","P-FA","P1","SOV","BRA","V"],[46,"17:00","17:24","B-FA","B2","SOV","SAN","V"],[46,"17:00","17:24","B-FA","B3","BRA","LOB","V"],[47,"17:24","17:48","P-MA","P2","SOV","SAN","V"],[47,"17:24","17:48","P-MA","P1","BRA","LOB","V"],[47,"17:24","17:48","B-MA","B3","SOV","KNY","V"],[47,"17:24","17:48","B-MA","B2","LOB","SAN","V"],[48,"17:48","18:12","P-FB","P2","SOV","KNY","V"],[48,"17:48","18:12","P-FB","P1","LOB","SAN","V"],[48,"17:48","18:12","B-FB","B3","BRA","KNY","V"],[48,"17:48","18:12","B-FB","B2","LOB","SOV","V"],[49,"18:12","18:36","P-MB","P1","BRA","KNY","V"],[49,"18:12","18:36","P-MB","P2","LOB","SOV","V"],[49,"18:12","18:36","B-MB","B2","LOB","KNY","V"],[49,"18:12","18:36","B-MB","B3","SAN","BRA","V"],[50,"18:36","19:00","P-MX","P2","LOB","KNY","V"],[50,"18:36","19:00","P-MX","P1","SAN","BRA","V"],[50,"18:36","19:00","B-MX","B2","SAN","KNY","V"],[50,"18:36","19:00","B-MX","B3","SOV","BRA","V"]];
+const TEAMS=[{id:"KNY",name:"KNY Padel Team"},{id:"SAN",name:"Santo Networking"},{id:"LOB",name:"Só Lob"},{id:"BRA",name:"Brahma"},{id:"SOV",name:"Sova"}];
+const TN=Object.fromEntries(TEAMS.map(t=>[t.id,t.name]));
+const CATS=[
+  {id:"P-MA",mod:"p",label:"Padel Masculino A",short:"Padel M-A",rule:"Categorias 2 e 3; soma da dupla ≥ 5."},
+  {id:"P-MB",mod:"p",label:"Padel Masculino B",short:"Padel M-B",rule:"Categorias 4, 5 e 6; soma da dupla ≥ 9."},
+  {id:"P-FA",mod:"p",label:"Padel Feminino A",short:"Padel F-A",rule:"Categorias 2, 3 e 4; soma da dupla ≥ 6."},
+  {id:"P-FB",mod:"p",label:"Padel Feminino B",short:"Padel F-B",rule:"Categorias 5 e 6; soma da dupla ≥ 10."},
+  {id:"P-MX",mod:"p",label:"Padel Mista",short:"Padel Mista",rule:"1 homem + 1 mulher; um da categoria A e outro da B da Maratona (padel)."},
+  {id:"B-MA",mod:"b",label:"Beach Tennis Masculino A",short:"Beach M-A",rule:"Categorias B e C; dois B não podem jogar juntos."},
+  {id:"B-MB",mod:"b",label:"Beach Tennis Masculino B",short:"Beach M-B",rule:"Somente categoria D."},
+  {id:"B-FA",mod:"b",label:"Beach Tennis Feminino A",short:"Beach F-A",rule:"Categorias B e C; duas B não podem jogar juntas."},
+  {id:"B-FB",mod:"b",label:"Beach Tennis Feminino B",short:"Beach F-B",rule:"Somente categoria D."},
+  {id:"B-MX",mod:"b",label:"Beach Tennis Mista",short:"Beach Mista",rule:"1 homem + 1 mulher; um da categoria A e outro da B da Maratona (beach)."}];
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const COURT={P1:"Padel 1",P2:"Padel 2",B2:"Beach 2",B3:"Beach 3"};
+const SCHED=RAW.map((r,i)=>{const [rd,ini,fim,cat,q,a,b,t]=r;
+  const day=(rd===1||ini>="20:30")?"13":"14";
+  return {id:"j"+String(i+1).padStart(3,"0"),rd,ini,fim,cat,q,a,b,t,start:Date.parse(`2026-11-${day}T${ini}:00-03:00`),end:Date.parse(`2026-11-${(fim>="20:30"||rd===1)?"13":"14"}T${fim}:00-03:00`)};});
+const SID=Object.fromEntries(SCHED.map(s=>[s.id,s]));
+const ROUNDS=[...new Set(SCHED.map(s=>s.rd))];
+
+// Inscritos KNY (lista oficial): [nome, sexo, padel, beach]
+const R=[
+ ["Caio Richter","M",3,"C"],["Carlos Frantz","M",3,"C"],["Fernando Knies","M",3,"C"],
+ ["Henrique Hartung","M",3,"D"],["Leonardo Scherer","M",3,"D"],["Saher Hamid","M",3,"D"],
+ ["Wylliam Rezende","M",2,null],["Anderson Schwantz","M",5,null],["André Teles","M",4,"C"],
+ ["Cristiano Ruschel","M",4,"D"],["Davi Wergutz","M",4,"D"],["Fabio Silva","M",5,null],
+ ["Fabio Wergutz","M",5,null],["Henrique Teles","M",5,"C"],["Joaquim Teles","M",5,null],
+ ["John Kroth","M",4,"C"],["Alessandro Asmann","M",null,"B"],["Michel Fagundes","M",null,"C"],
+ ["Silvano Kroth","M",null,"B"],
+ ["Carolina Genro","F",2,"B"],["Daniela Andrade","F",4,"D"],["Débora Scherer","F",3,null],
+ ["Laura Frantz","F",4,"C"],["Mariana Frey","F",3,"C"],["Natália Ody","F",3,null],
+ ["Pamela Sippel","F",3,"C"],["Paula Pascoal","F",4,null],["Sabrina Seleri","F",3,null],
+ ["Suellen Benaventana","F",3,"D"],["Cassandra Farias","F",5,null],["Eduarda Heinen","F",5,null],
+ ["Gabriela Frey","F",5,null],["Luciane Kroth","F",5,"B"],["Carol Pochmann","F",null,"B"],
+ ["Carolina Borba","F",null,"B"],["Claudia Eugênio","F",null,"C"],["Daiane Wünsch","F",null,"C"],
+ ["Fernanda Canabarro","F",null,"C"],["Ana Frantz","F",null,"D"],["Manuela Kaufmann","F",null,"D"]];
+const ROSTER=R.map(([n,s,p,b])=>({n,s,p,b,pg:p==null?null:(s==="M"?(p<=3?"A":"B"):(p<=4?"A":"B")),bg:b==null?null:(b==="D"?"B":"A")})).sort((x,y)=>x.n.localeCompare(y.n,"pt"));
+const RN=Object.fromEntries(ROSTER.map(a=>[a.n,a]));
+const FAMILY=[
+  {n:"Fernanda Canabarro",note:"Só beach. Na mista, precisa de parceiro D: Cristiano, Davi, Henrique Hartung, Leonardo ou Saher."},
+  {n:"Joaquim Teles",note:"Só padel. No M-B qualquer parceiro da lista fecha a soma mínima (5+4=9). Na mista, precisa de parceira da cat. A do padel."}];
+const OUT=new Set(["André Teles"]); // fora por lesão
+const FAMN=new Set(FAMILY.map(f=>f.n));
+function famCats(n){return CATS.filter(c=>eligible(c.id).some(a=>a.n===n)).map(c=>c.id);}
+
+function eligible(cat){const c=cat.slice(2),P=cat[0]==="P";
+  return ROSTER.filter(a=>{ if(typeof OUT!=="undefined"&&OUT.has(a.n)) return false; if(P){ if(a.p==null) return false;
+      return c==="MA"?a.s==="M"&&a.p<=3:c==="MB"?a.s==="M"&&a.p>=4:c==="FA"?a.s==="F"&&a.p<=4:c==="FB"?a.s==="F"&&a.p>=5:true;}
+    if(a.b==null) return false;
+    return c==="MA"?a.s==="M"&&a.b!=="D":c==="MB"?a.s==="M"&&a.b==="D":c==="FA"?a.s==="F"&&a.b!=="D":c==="FB"?a.s==="F"&&a.b==="D":true;});}
+function catTag(a,cat){const P=cat[0]==="P";return (P?a.p:a.b)+(cat.endsWith("MX")?" · "+(P?a.pg:a.bg):"");}
+function validate(cat,n1,n2){
+  if(!n1||!n2) return null;
+  if(n1===n2) return {ok:false,msg:"Escolha dois atletas diferentes."};
+  const a=RN[n1],b=RN[n2],c=cat.slice(2),P=cat[0]==="P",el=eligible(cat).map(x=>x.n);
+  for(const x of [a,b]) if(!el.includes(x.n)) return {ok:false,msg:`${x.n} não é elegível para ${CAT[cat].label}.`};
+  if(c==="MX"){ if(a.s===b.s) return {ok:false,msg:"Mista precisa de 1 homem e 1 mulher."};
+    const ga=P?a.pg:a.bg,gb=P?b.pg:b.bg;
+    return ga===gb?{ok:false,msg:`Os dois são da categoria ${ga} da Maratona; a mista exige um A e um B.`}:{ok:true,msg:`Válida: ${a.n} (${ga}) + ${b.n} (${gb}).`};}
+  if(P){const min={MA:5,MB:9,FA:6,FB:10}[c],s=a.p+b.p;
+    return s>=min?{ok:true,msg:`Válida: ${a.p} + ${b.p} = ${s} (mínimo ${min}).`}:{ok:false,msg:`Inválida: ${a.p} + ${b.p} = ${s}; o mínimo é ${min}.`};}
+  if((c==="MA"||c==="FA")&&a.b==="B"&&b.b==="B") return {ok:false,msg:"Inválida: dois atletas B não podem jogar juntos."};
+  return {ok:true,msg:`Válida: ${a.b} + ${b.b}.`};
+}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+function opts(sel,list,ph){sel.innerHTML=(ph!=null?`<option value="">${ph}</option>`:"")+list.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("");}
+
+let ESC={}, RES={}, ADJ=[], db=null, canWrite=false, EDITORS=[], OWNER="", me=null, loaded=false, selId=null, viewRound=null, userMovedRound=false;
+const has=id=>RES[id]&&Number.isFinite(RES[id].g1)&&Number.isFinite(RES[id].g2);
+function pairOf(id){ const r=RES[id]; if(r&&r.dupla&&r.dupla.length) return r.dupla; return (ESC[id]&&ESC[id].dupla)||[]; }
+function kv(s){ const r=RES[s.id]; if(s.a==="KNY") return {opp:s.b,m:r?.g1,t:r?.g2}; if(s.b==="KNY") return {opp:s.a,m:r?.g2,t:r?.g1}; return null; }
+
+function standings(){
+  const st=Object.fromEntries(TEAMS.map(t=>[t.id,{id:t.id,gj:0,bon:0,v:0,e:0,d:0,j:0,sf:0}]));
+  for(const s of SCHED){ if(!has(s.id)) continue; const r=RES[s.id],A=st[s.a],B=st[s.b];
+    A.gj+=r.g1;B.gj+=r.g2;A.sf+=r.g2;B.sf+=r.g1;A.j++;B.j++;
+    if(r.g1>r.g2){A.v++;B.d++;}else if(r.g2>r.g1){B.v++;A.d++;}else{A.e++;B.e++;} }
+  for(const a of ADJ) if(st[a.team]) st[a.team].bon+=a.games;
+  return Object.values(st).map(x=>({...x,tot:x.gj+x.bon})).sort((x,y)=>y.tot-x.tot||y.v-x.v||y.gj-x.gj);
+}
+
+function currentRound(){ const now=Date.now();
+  const live=SCHED.find(s=>now>=s.start&&now<s.end); if(live) return live.rd;
+  const nx=SCHED.find(s=>s.start>now); return nx?nx.rd:ROUNDS[ROUNDS.length-1]; }
+
+function renderAll(){ renderFamily(); renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderMatrix(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
+
+function renderScoreboard(){
+  $("scoreboard").innerHTML=standings().map((x,i)=>`<div class="team ${x.id==="KNY"?"kny":""}"><span class="pos">${i+1}º</span><span class="name">${esc(TN[x.id])}</span><span class="pts">${x.tot}</span><span class="sub">${x.v}V · ${x.j}/80 jogos${x.bon?` · ${x.bon>0?"+":""}${x.bon} bônus`:""}</span></div>`).join("");
+}
+function renderStandings(){
+  $("standings").innerHTML=`<thead><tr><th>#</th><th>Equipe</th><th class="r">Games</th><th class="r">V</th><th class="r">E</th><th class="r">D</th><th class="r">Jogos</th><th class="r">Saldo</th><th class="r">Bônus</th></tr></thead><tbody>`+
+  standings().map((x,i)=>`<tr class="${x.id==="KNY"?"kny":""}"><td>${i+1}</td><td>${esc(TN[x.id])}</td><td class="r"><b>${x.tot}</b></td><td class="r">${x.v}</td><td class="r">${x.e}</td><td class="r">${x.d}</td><td class="r">${x.j}</td><td class="r">${x.gj-x.sf>0?"+":""}${x.gj-x.sf}</td><td class="r">${x.bon||"–"}</td></tr>`).join("")+"</tbody>";
+}
+function matchCard(s){
+  const r=RES[s.id], k=s.a==="KNY"||s.b==="KNY", c=CAT[s.cat], d=has(s.id);
+  const w1=d&&r.g1>r.g2, w2=d&&r.g2>r.g1, pl=pairOf(s.id), pair=pl.length?((r?.dupla||[]).length?"":"Escalados: ")+pl.join(" / "):"";
+  return `<button type="button" class="match ${k?"kny":""} ${selId===s.id?"sel":""}" data-pick="${s.id}">
+    <span class="top"><span class="${c.mod}">${esc(c.short)}</span><span class="muted">${esc(COURT[s.q])} · ${s.t==="I"?"ida":"volta"}</span></span>
+    <span class="vs"><span class="tn ${s.a==="KNY"?"k":""}">${esc(TN[s.a])}</span><span class="sc ${w1?"w":""}">${d?r.g1:"–"}</span>
+    <span class="tn ${s.b==="KNY"?"k":""}">${esc(TN[s.b])}</span><span class="sc ${w2?"w":""}">${d?r.g2:"–"}</span></span>
+    ${pair?`<span class="pair">${esc(pair)}</span>`:""}</button>`;
+}
+function renderRounds(){
+  if(viewRound==null||!userMovedRound) viewRound=currentRound();
+  const cr=currentRound();
+  const shown=[viewRound, ROUNDS.includes(viewRound+1)?viewRound+1:null].filter(x=>x!=null);
+  $("roundSel").value=String(viewRound);
+  const now=Date.now();
+  $("rounds").innerHTML=shown.map(rd=>{ const list=SCHED.filter(s=>s.rd===rd), s0=list[0];
+    const live=now>=s0.start&&now<s0.end;
+    const tag=live?`<span class="pill k">em jogo</span>`:rd===cr&&now<s0.start?`<span class="pill">próxima</span>`:now>=s0.end?`<span class="pill">encerrada</span>`:"";
+    return `<div class="round"><div class="round-head"><span class="t">Rodada ${rd} · ${s0.ini}–${s0.fim}</span>${tag}</div><div class="courts">${list.sort((x,y)=>x.q.localeCompare(y.q)).map(matchCard).join("")}</div></div>`;}).join("");
+}
+function renderKnyNext(){
+  const now=Date.now();
+  const list=SCHED.filter(s=>(s.a==="KNY"||s.b==="KNY")&&s.end>now&&!has(s.id)).slice(0,8);
+  if(!list.length){$("knyNext").innerHTML=`<tbody><tr><td class="muted">Todos os jogos da KNY já têm placar.</td></tr></tbody>`;return;}
+  $("knyNext").innerHTML=`<thead><tr><th>Hora</th><th>Categoria</th><th>Quadra</th><th>Adversário</th></tr></thead><tbody>`+
+    list.map(s=>`<tr class="click" data-pick="${s.id}"><td>${s.ini}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td>${esc(COURT[s.q])}</td><td>${esc(TN[kv(s).opp])}</td></tr>`).join("")+"</tbody>";
+}
+function renderMatrix(){
+  const opps=TEAMS.filter(t=>t.id!=="KNY"); let done=0;
+  const rows=CATS.map(c=>{ let sum=0;
+    const cells=opps.map(o=>{ const list=SCHED.filter(s=>s.cat===c.id&&(s.a==="KNY"||s.b==="KNY")&&kv(s).opp===o.id);
+      return "<td>"+list.map(s=>{ const k=kv(s); if(!has(s.id)) return `<span class="slot" title="${s.ini}">${s.ini}</span>`;
+        done++; sum+=k.m; const cls=k.m>k.t?"w":k.m<k.t?"l":"d"; return `<span class="slot ${cls}">${k.m}–${k.t}</span>`;}).join(" ")+"</td>";}).join("");
+    return `<tr><td><span class="mod ${c.mod}"></span>${esc(c.short)}</td>${cells}<td class="r"><b>${sum}</b></td></tr>`;}).join("");
+  $("matrix").innerHTML=`<thead><tr><th>Categoria</th>${opps.map(o=>`<th style="text-align:center">${esc(o.name)}</th>`).join("")}<th class="r">Games</th></tr></thead><tbody>${rows}</tbody>`;
+  $("knyProg").textContent=`${done} de 80 jogos com placar`; $("knyBar").style.width=(done/80*100).toFixed(1)+"%";
+}
+function renderFull(){
+  const ft=$("fTeam").value, fc=$("fCatSel").value, fs=$("fState").value;
+  const list=SCHED.filter(s=>(!ft||s.a===ft||s.b===ft)&&(!fc||s.cat===fc)&&(!fs||(fs==="done")===has(s.id)));
+  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Turno</th></tr></thead><tbody>`+
+    (list.length?list.map(s=>{ const r=RES[s.id],d=has(s.id),k=s.a==="KNY"||s.b==="KNY";
+      let cls=""; if(d&&k){const x=kv(s);cls=x.m>x.t?"w":x.m<x.t?"l":"d";}
+      return `<tr class="click ${k?"knyrow":""}" data-pick="${s.id}"><td>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td>${s.t==="I"?"Ida":"Volta"}</td></tr>`;}).join(""):`<tr><td colspan="8" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
+}
+function renderAthletes(){
+  const m={};
+  for(const s of SCHED){ const k=kv(s); if(!k||!has(s.id)) continue;
+    for(const n of (RES[s.id].dupla||[])){ const x=m[n]||(m[n]={j:0,v:0,gm:0,p:0,b:0}); x.j++; x.gm+=k.m; if(k.m>k.t)x.v++; s.cat[0]==="P"?x.p++:x.b++; } }
+  const rows=Object.entries(m).sort((a,b)=>b[1].j-a[1].j||a[0].localeCompare(b[0],"pt"));
+  $("athletes").innerHTML=rows.length?`<thead><tr><th>Atleta</th><th class="r">Jogos</th><th class="r">Padel</th><th class="r">Beach</th><th class="r">V</th><th class="r">Games</th></tr></thead><tbody>`+rows.map(([n,x])=>`<tr><td>${esc(n)}</td><td class="r">${x.j}</td><td class="r">${x.p}</td><td class="r">${x.b}</td><td class="r">${x.v}</td><td class="r">${x.gm}</td></tr>`).join("")+"</tbody>"
+    :`<tbody><tr><td class="muted" style="white-space:normal">Ao lançar um jogo da KNY, informe a dupla para acompanhar quem jogou quanto e quantos games cada um somou.</td></tr></tbody>`;
+}
+function renderAdj(){
+  $("adjList").innerHTML=ADJ.length?ADJ.slice().sort((a,b)=>(a.ts||0)-(b.ts||0)).map(a=>`<div class="adj"><div><div style="font-weight:600">${esc(TN[a.team]||a.team)}</div><div class="muted small">${esc(a.motivo)}</div></div><span class="res ${a.games>0?"w":"l"}">${a.games>0?"+":""}${a.games}</span>${canWrite?`<button type="button" class="link" data-deladj="${esc(a.id)}">excluir</button>`:"<span></span>"}</div>`).join(""):`<div class="muted small">Nenhum ajuste lançado.</div>`;
+}
+
+function renderFamily(){
+  const now=Date.now();
+  $("family").innerHTML=FAMILY.map(f=>{
+    const cats=famCats(f.n), a=RN[f.n];
+    const games=SCHED.filter(s=>(s.a==="KNY"||s.b==="KNY")&&cats.includes(s.cat));
+    let j=0,v=0,gm=0;
+    for(const s of games){ if(!has(s.id)||!(RES[s.id].dupla||[]).includes(f.n)) continue; const k=kv(s); j++; gm+=k.m; if(k.m>k.t) v++; }
+    const byR={}; for(const s of games) (byR[s.rd]=byR[s.rd]||[]).push(s);
+    const esc_=games.filter(s=>!has(s.id)&&pairOf(s.id).includes(f.n));
+    const up=games.filter(s=>s.end>now&&!has(s.id)).sort((x,y)=>(pairOf(y.id).includes(f.n)-pairOf(x.id).includes(f.n))||x.start-y.start).slice(0,8).sort((x,y)=>x.start-y.start);
+    const mods=[a.p!=null?`Padel ${a.p}`:null,a.b!=null?`Beach ${a.b}`:null].filter(Boolean).join(" · ");
+    return `<div class="fm"><div><div class="nm">${esc(f.n)}</div><div class="muted small">${mods}</div></div>
+      <div class="chips">${cats.map(c=>`<span class="pill"><span class="mod ${CAT[c].mod}"></span>${esc(CAT[c].short)}</span>`).join("")}</div>
+      <div class="stat"><span><b>${j}</b><span class="muted small">jogou</span></span><span><b>${v}</b><span class="muted small">vitórias</span></span><span><b>${gm}</b><span class="muted small">games</span></span><span><b>${esc_.length}</b><span class="muted small">escalada(o)</span></span><span><b>${games.length}</b><span class="muted small">possíveis</span></span></div>
+      <div class="muted small">${esc(f.note)}</div>
+      ${up.length?`<ul>${up.map(s=>{const clash=byR[s.rd].length>1;const pl=pairOf(s.id), me=pl.includes(f.n), mate=pl.filter(n=>n!==f.n)[0];
+        return `<li class="${me?"esc":clash?"clash":""}" title="${clash?"Outro jogo possível na mesma rodada":""}"><span class="tm">${s.ini}</span><span>${me?"<b>":""}${esc(CAT[s.cat].short)} × ${esc(TN[kv(s).opp])}${me?"</b>":""}${me&&mate?`<div class="muted small">com ${esc(mate)}</div>`:""}</span><span class="${me?"pill k":"muted"}">${me?"escalada(o)":esc(COURT[s.q])}</span></li>`;}).join("")}</ul>`:`<div class="muted small">Sem jogos pendentes.</div>`}
+    </div>`;}).join("");
+}
+
+/* ---------- lançamento ---------- */
+function renderSel(keepInputs){
+  const s=selId&&SID[selId];
+  if(!s){$("saveBtn").disabled=true;return;}
+  const c=CAT[s.cat], r=RES[s.id], k=s.a==="KNY"||s.b==="KNY";
+  $("selGame").innerHTML=`<span class="muted small">Rodada ${s.rd} · ${s.ini}–${s.fim} · ${esc(COURT[s.q])} · ${s.t==="I"?"ida":"volta"}</span><span class="big">${esc(c.label)}</span>`;
+  $("lbl1").textContent=TN[s.a]; $("lbl2").textContent=TN[s.b];
+  $("formTag").textContent=has(s.id)?"já tem placar":"sem placar"; $("formTag").className="pill"+(has(s.id)?" k":"");
+  $("pairRow").hidden=!k; $("saveEsc").hidden=!(k&&canWrite); $("clearRes").hidden=!(canWrite&&has(s.id));
+  $("saveBtn").disabled=!canWrite;
+  if(!keepInputs){
+    $("fG1").value=has(s.id)?r.g1:""; $("fG2").value=has(s.id)?r.g2:""; $("fObs").value=r?.obs||"";
+    const el=eligible(s.cat).map(a=>[a.n,`${FAMN.has(a.n)?"★ ":""}${a.n} (${catTag(a,s.cat)})`]);
+    opts($("fP1"),el,"— opcional —"); opts($("fP2"),el,"— opcional —");
+    const d=pairOf(s.id); $("fP1").value=d[0]||""; $("fP2").value=d[1]||"";
+  }
+  pairCheck();
+}
+function pairCheck(){
+  const s=selId&&SID[selId], h=$("pairHint");
+  if(!s||!(s.a==="KNY"||s.b==="KNY")){h.hidden=true;return;}
+  const p=[$("fP1").value,$("fP2").value].filter(Boolean);
+  const msgs=[]; let bad=false;
+  const v=validate(s.cat,$("fP1").value,$("fP2").value); if(v){msgs.push(v.msg); if(!v.ok) bad=true;}
+  const other=SCHED.filter(o=>o.rd===s.rd&&o.id!==s.id&&(o.a==="KNY"||o.b==="KNY"));
+  for(const o of other){ const busy=pairOf(o.id).filter(n=>p.includes(n));
+    if(busy.length){bad=true;msgs.push(`${busy.join(" e ")} já está na ${CAT[o.cat].short} da mesma rodada.`);} }
+  if(!msgs.length){h.hidden=true;return;}
+  h.hidden=false; h.className="hint "+(bad?"bad":"ok"); h.textContent=msgs.join(" ");
+}
+function pick(id){ selId=id; renderRounds(); renderSel(); msg("");
+  if(window.matchMedia("(max-width:860px)").matches) $("formPanel").scrollIntoView({behavior:"smooth",block:"start"}); }
+function msg(t,cls){const m=$("formMsg");m.hidden=!t;m.className="hint "+(cls||"");m.textContent=t||"";}
+
+document.addEventListener("click",async e=>{
+  const p=e.target.closest("[data-pick]"); if(p){pick(p.dataset.pick);return;}
+  const del=e.target.closest("[data-deladj]");
+  if(del&&db){ if(!del.classList.contains("danger")){del.classList.add("danger");del.textContent="confirmar";return;}
+    try{await db.collection("ajustes").doc(del.dataset.deladj).delete();}catch(_){} }
+});
+$("fP1").addEventListener("change",pairCheck); $("fP2").addEventListener("change",pairCheck);
+let saving=false;
+$("gameForm").addEventListener("submit",async e=>{
+  e.preventDefault(); if(saving||!selId) return;
+  if(!db){msg("Entre com uma conta autorizada para lançar.","bad");return;}
+  const g1=parseInt($("fG1").value,10), g2=parseInt($("fG2").value,10), s=SID[selId];
+  if(!Number.isFinite(g1)||!Number.isFinite(g2)){msg("Preencha os games das duas equipes.","bad");return;}
+  const k=s.a==="KNY"||s.b==="KNY";
+  const doc={g1,g2,obs:$("fObs").value.trim(),dupla:k?[$("fP1").value,$("fP2").value].filter(Boolean):[],ts:Date.now()};
+  saving=true; $("saveBtn").disabled=true;
+  try{ await db.collection("resultados").doc(s.id).set(doc);
+    msg(`Salvo: ${TN[s.a]} ${g1} × ${g2} ${TN[s.b]} · ${CAT[s.cat].short}, rodada ${s.rd}.`,"ok");
+  }catch(err){ msg(err&&(err.code==="permission-denied"||err.code==="invalid_argument")?"Sua conta não está autorizada a lançar. Peça ao André para incluir seu e-mail.":"Não consegui salvar agora. Tente de novo em alguns segundos.","bad"); }
+  finally{ saving=false; $("saveBtn").disabled=false; }
+});
+$("saveEsc").addEventListener("click",async()=>{
+  if(!db||!selId) return; const s=SID[selId];
+  const dupla=[$("fP1").value,$("fP2").value].filter(Boolean);
+  try{ if(dupla.length) await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now()}); else await db.collection("escalacao").doc(selId).delete();
+    msg(dupla.length?`Escalação salva: ${dupla.join(" / ")} · ${CAT[s.cat].short}, ${s.ini}.`:"Escalação removida.","ok");
+  }catch(_){ msg("Não consegui salvar a escalação agora.","bad"); }
+});
+$("clearRes").addEventListener("click",async e=>{
+  const b=e.currentTarget; if(!db||!selId) return;
+  if(!b.classList.contains("danger")){b.classList.add("danger");b.textContent="confirmar: apagar placar";return;}
+  b.classList.remove("danger"); b.textContent="apagar placar";
+  try{ await db.collection("resultados").doc(selId).delete(); msg("Placar apagado.",""); }catch(_){ msg("Não consegui apagar agora.","bad"); }
+});
+$("adjForm").addEventListener("submit",async e=>{
+  e.preventDefault(); if(!db) return;
+  const g=parseInt($("aGames").value,10); if(!Number.isFinite(g)||g===0) return;
+  $("adjBtn").disabled=true;
+  try{ await db.collection("ajustes").doc().set({team:$("aTeam").value,games:g,motivo:$("aMotivo").value,ts:Date.now()}); $("aGames").value=""; }catch(_){}
+  finally{$("adjBtn").disabled=false;}
+});
+
+/* rodada / filtros */
+opts($("roundSel"),ROUNDS.map(r=>[String(r),`Rodada ${r} · ${SCHED.find(s=>s.rd===r).ini}`]));
+$("roundSel").addEventListener("change",()=>{viewRound=+$("roundSel").value;userMovedRound=true;renderRounds();});
+$("prevR").addEventListener("click",()=>{viewRound=Math.max(1,viewRound-1);userMovedRound=true;renderRounds();});
+$("nextR").addEventListener("click",()=>{viewRound=Math.min(ROUNDS.length,viewRound+1);userMovedRound=true;renderRounds();});
+opts($("fTeam"),[["KNY","Só KNY"],["","Todas as equipes"],...TEAMS.filter(t=>t.id!=="KNY").map(t=>[t.id,t.name])]);
+opts($("fCatSel"),[["","Todas as categorias"],...CATS.map(c=>[c.id,c.label])]);
+["fTeam","fCatSel","fState"].forEach(id=>$(id).addEventListener("change",renderFull));
+opts($("aTeam"),TEAMS.map(t=>[t.id,t.name]));
+
+/* validador */
+opts($("vCat"),CATS.map(c=>[c.id,c.label]));
+function setV(){ const c=$("vCat").value, v1=$("vP1").value, v2=$("vP2").value;
+  const el=eligible(c).map(a=>[a.n,`${FAMN.has(a.n)?"★ ":""}${a.n} (${catTag(a,c)})`]);
+  opts($("vP1"),el,"—"); opts($("vP2"),el,"—");
+  if(el.some(x=>x[0]===v1)) $("vP1").value=v1; if(el.some(x=>x[0]===v2)) $("vP2").value=v2;
+  $("vRule").textContent=`Regra: ${CAT[c].rule} ${el.length} atletas KNY elegíveis.`;
+  const r=validate(c,$("vP1").value,$("vP2").value), h=$("vHint");
+  if(!r){h.className="hint";h.textContent="Escolha os dois atletas.";} else {h.className="hint "+(r.ok?"ok":"bad");h.textContent=r.msg;} }
+$("vCat").addEventListener("change",setV); $("vP1").addEventListener("change",setV); $("vP2").addEventListener("change",setV); setV();
+
+/* cronograma */
+const EVENTS=[
+  ["2026-11-13T19:30","Cerimônia de abertura","5 games para cada equipe com ≥ 20 integrantes presentes"],
+  ["2026-11-13T20:30","Início dos jogos · rodada 1","24 min por jogo: 3 de aquecimento + 21 de jogo"],
+  ["2026-11-13T22:00","Jantar","Pelo regulamento; a tabela segue com jogos"],
+  ["2026-11-14T00:06","Pausa da meia-noite","Até 00:36"],
+  ["2026-11-14T03:24","Pausa da madrugada + lanche","Até 03:54 · contagem de integrantes: 10 games para a equipe mais numerosa"],
+  ["2026-11-14T06:18","Café da manhã","Até 06:48"],
+  ["2026-11-14T12:00","Pausa do meio-dia","Até 12:30"],
+  ["2026-11-14T16:06","Pausa da tarde + lanche","Até 16:36"],
+  ["2026-11-14T18:36","Última rodada (50)","Termina 19:00"],
+  ["2026-11-14T19:30","Encerramento e premiação",""]].map(e=>[Date.parse(e[0]+":00-03:00"),e[1],e[2]]);
+function renderTimeline(){
+  const now=Date.now(), ni=EVENTS.findIndex(e=>e[0]>now);
+  $("timeline").innerHTML=EVENTS.map((e,i)=>{ const d=new Date(e[0]);
+    const t=d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"});
+    const day=d.toLocaleDateString("pt-BR",{weekday:"short",timeZone:"America/Sao_Paulo"});
+    return `<div class="tl ${e[0]<=now?"past":i===ni?"next":""}"><time>${t} <span class="muted" style="font-size:.72rem">${day}</span></time><div>${esc(e[1])}${e[2]?`<div class="muted small" style="font-weight:400">${esc(e[2])}</div>`:""}</div></div>`;}).join("");
+  if(ni>=0){const ms=EVENTS[ni][0]-now,h=Math.floor(ms/3.6e6),m=Math.floor(ms%3.6e6/6e4);
+    $("nextEv").textContent=`${EVENTS[ni][1]} em ${h>=24?Math.floor(h/24)+"d "+(h%24)+"h":h+"h "+m+"min"}`;}
+  else $("nextEv").textContent="Maratona encerrada";
+}
+setInterval(()=>{renderTimeline(); if(!userMovedRound) renderRounds();},60000);
+
+/* conexão */
+renderTimeline(); renderAll();
+const timer=setTimeout(()=>{ if(!loaded) $("status").textContent="Ainda sem conexão com o placar compartilhado. Os resultados aparecem assim que conectar."; },10000);
+function stamp(){ const n=SCHED.filter(s=>has(s.id)).length; $("status").innerHTML=`<b>Ao vivo</b> · ${n} de 200 jogos com placar · atualizado ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`; }
+function applyAuth(){
+  const email=(me&&me.email||"").toLowerCase();
+  canWrite=!!email&&EDITORS.map(e=>e.toLowerCase()).includes(email);
+  $("loginBtn").hidden=!!me; $("logoutBtn").hidden=!me;
+  $("who").textContent=me?(canWrite?`Lançando como ${me.email}`:`${me.email} não está autorizado a lançar`):"";
+  $("gameForm").classList.toggle("ro",!canWrite); $("adjForm").classList.toggle("ro",!canWrite);
+  $("adjForm").hidden=!canWrite;
+  $("formH").textContent=canWrite?"Lançar resultado":"Jogo selecionado";
+  const isOwner=!!email&&email===OWNER.toLowerCase();
+  $("adminPanel").hidden=!isOwner;
+  if(isOwner) $("editorList").innerHTML=EDITORS.map(e=>`<div class="e"><span>${esc(e)}${e.toLowerCase()===OWNER.toLowerCase()?' <span class="pill">você</span>':''}</span>${e.toLowerCase()===OWNER.toLowerCase()?'':`<button type="button" class="link" data-rmed="${esc(e)}">remover</button>`}</div>`).join("");
+  renderAll();
+}
+(function(){
+  if(!window.firebase){clearTimeout(timer);$("status").textContent="Não consegui carregar o placar. Verifique a internet e recarregue.";return;}
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db=firebase.firestore();
+  const auth=firebase.auth();
+  auth.onAuthStateChanged(u=>{me=u;applyAuth();});
+  $("loginBtn").addEventListener("click",()=>{ const p=new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:"select_account"});
+    auth.signInWithPopup(p).catch(()=>auth.signInWithRedirect(p)); });
+  $("logoutBtn").addEventListener("click",()=>auth.signOut());
+  const OWNER_EMAIL="deteles@hotmail.com";
+  db.collection("config").doc("editores").onSnapshot(d=>{ const x=d.data()||{}; EDITORS=x.emails||[]; OWNER=x.owner||OWNER_EMAIL; applyAuth();
+    if(!d.exists&&me&&(me.email||"").toLowerCase()===OWNER_EMAIL) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL]}).catch(()=>{}); },()=>{});
+  auth.onAuthStateChanged(u=>{ if(u&&(u.email||"").toLowerCase()===OWNER_EMAIL&&!EDITORS.length) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL]}).catch(()=>{}); });
+  $("editorForm").addEventListener("submit",async e=>{ e.preventDefault(); const v=$("edEmail").value.trim().toLowerCase(); if(!v||!v.includes("@")) return;
+    try{ await db.collection("config").doc("editores").update({emails:firebase.firestore.FieldValue.arrayUnion(v)}); $("edEmail").value=""; }catch(_){ $("edEmail").value=""; } });
+  document.addEventListener("click",async e=>{ const b=e.target.closest("[data-rmed]"); if(!b) return;
+    if(!b.classList.contains("danger")){b.classList.add("danger");b.textContent="confirmar";return;}
+    try{ await db.collection("config").doc("editores").update({emails:firebase.firestore.FieldValue.arrayRemove(b.dataset.rmed)}); }catch(_){} });
+  $("loginBtn").hidden=false;
+  db.collection("resultados").onSnapshot(snap=>{
+    const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={g1:x.g1,g2:x.g2,obs:x.obs,dupla:[...(x.dupla||[])]}; }
+    RES=o; loaded=true; clearTimeout(timer); stamp(); renderAll();
+  },()=>{ $("status").textContent="Conexão com o placar interrompida. Recarregue a página."; });
+  db.collection("escalacao").onSnapshot(snap=>{ const o={}; for(const d of snap.docs) o[d.id]={dupla:[...(d.data().dupla||[])]}; ESC=o; renderAll(); },()=>{});
+  db.collection("ajustes").onSnapshot(snap=>{ ADJ=snap.docs.map(d=>({id:d.id,...d.data()})); renderScoreboard(); renderStandings(); renderAdj(); },()=>{});
+})();
+})();
+</script>
+</body>
+</html>
+
