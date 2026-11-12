@@ -167,6 +167,7 @@ body{margin:0}
     <section class="panel">
       <div class="panel-head"><h2 id="nowTitle">Agora na quadra</h2>
         <div class="filters">
+          <button type="button" id="nowR">Agora</button>
           <button type="button" id="prevR" aria-label="Rodada anterior">‹</button>
           <select id="roundSel" aria-label="Rodada"></select>
           <button type="button" id="nextR" aria-label="Próxima rodada">›</button>
@@ -266,12 +267,6 @@ body{margin:0}
     </section>
   </div>
 
-  <section class="panel" id="adminPanel" hidden>
-    <div class="panel-head"><h2>Quem pode lançar</h2><span class="muted small">só você vê esta seção</span></div>
-    <div class="editors" id="editorList"></div>
-    <form id="editorForm" class="row"><label style="flex:3 1 220px">E-mail Google<input type="email" id="edEmail" placeholder="nome@gmail.com"></label><div style="display:flex;align-items:flex-end"><button type="submit">Adicionar</button></div></form>
-  </section>
-
   <section class="panel">
     <div class="panel-head"><h2>Cronograma</h2><span class="muted" id="nextEv"></span></div>
     <div class="timeline" id="timeline"></div>
@@ -363,7 +358,8 @@ function opts(sel,list,ph){sel.innerHTML=(ph!=null?`<option value="">${ph}</opti
 
 let ESC={}, RES={}, ADJ=[], db=null, canWrite=false, EDITORS=[], OWNER="", me=null, loaded=false, selId=null, viewRound=null, userMovedRound=false;
 const has=id=>RES[id]&&Number.isFinite(RES[id].g1)&&Number.isFinite(RES[id].g2);
-function pairOf(id){ const r=RES[id]; if(r&&r.dupla&&r.dupla.length) return r.dupla; return (ESC[id]&&ESC[id].dupla)||[]; }
+const SEED_ESC={j033:["Joaquim Teles","Davi Wergutz"],j059:["Fernanda Canabarro","Henrique Hartung"],j093:["Joaquim Teles","Cristiano Ruschel"],j123:["Carol Pochmann","Fernanda Canabarro"]};
+function pairOf(id){ const r=RES[id]; if(r&&r.dupla&&r.dupla.length) return r.dupla; if(ESC[id]) return ESC[id].dupla||[]; return SEED_ESC[id]||[]; }
 function kv(s){ const r=RES[s.id]; if(s.a==="KNY") return {opp:s.b,m:r?.g1,t:r?.g2}; if(s.b==="KNY") return {opp:s.a,m:r?.g2,t:r?.g1}; return null; }
 
 function standings(){
@@ -401,7 +397,7 @@ function renderRounds(){
   if(viewRound==null||!userMovedRound) viewRound=currentRound();
   const cr=currentRound();
   const shown=[viewRound, ROUNDS.includes(viewRound+1)?viewRound+1:null].filter(x=>x!=null);
-  $("roundSel").value=String(viewRound);
+  $("roundSel").value=String(viewRound); $("nowR").hidden=!userMovedRound;
   const now=Date.now();
   $("rounds").innerHTML=shown.map(rd=>{ const list=SCHED.filter(s=>s.rd===rd), s0=list[0];
     const live=now>=s0.start&&now<s0.end;
@@ -489,6 +485,15 @@ function renderSel(keepInputs){
   }
   pairCheck();
 }
+function pairIssues(s,p1,p2){
+  const p=[p1,p2].filter(Boolean), errs=[];
+  if(p.length===1) errs.push("Informe os dois atletas da dupla.");
+  if(p.length===2){ const v=validate(s.cat,p1,p2); if(v&&!v.ok) errs.push(v.msg); }
+  for(const o of SCHED.filter(o=>o.rd===s.rd&&o.id!==s.id&&(o.a==="KNY"||o.b==="KNY"))){
+    const busy=pairOf(o.id).filter(n=>p.includes(n));
+    if(busy.length) errs.push(`${busy.join(" e ")} já está na ${CAT[o.cat].short} da mesma rodada (${o.ini}).`); }
+  return errs;
+}
 function pairCheck(){
   const s=selId&&SID[selId], h=$("pairHint");
   if(!s||!(s.a==="KNY"||s.b==="KNY")){h.hidden=true;return;}
@@ -519,6 +524,7 @@ $("gameForm").addEventListener("submit",async e=>{
   const g1=parseInt($("fG1").value,10), g2=parseInt($("fG2").value,10), s=SID[selId];
   if(!Number.isFinite(g1)||!Number.isFinite(g2)){msg("Preencha os games das duas equipes.","bad");return;}
   const k=s.a==="KNY"||s.b==="KNY";
+  if(k){ const errs=pairIssues(s,$("fP1").value,$("fP2").value); if(errs.length){ msg("Não salvei: "+errs.join(" "),"bad"); return; } }
   const doc={g1,g2,obs:$("fObs").value.trim(),dupla:k?[$("fP1").value,$("fP2").value].filter(Boolean):[],ts:Date.now()};
   saving=true; $("saveBtn").disabled=true;
   try{ await db.collection("resultados").doc(s.id).set(doc);
@@ -529,7 +535,8 @@ $("gameForm").addEventListener("submit",async e=>{
 $("saveEsc").addEventListener("click",async()=>{
   if(!db||!selId) return; const s=SID[selId];
   const dupla=[$("fP1").value,$("fP2").value].filter(Boolean);
-  try{ if(dupla.length) await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now()}); else await db.collection("escalacao").doc(selId).delete();
+  const errs=pairIssues(s,$("fP1").value,$("fP2").value); if(errs.length){ msg("Não salvei: "+errs.join(" "),"bad"); return; }
+  try{ await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now()});
     msg(dupla.length?`Escalação salva: ${dupla.join(" / ")} · ${CAT[s.cat].short}, ${s.ini}.`:"Escalação removida.","ok");
   }catch(_){ msg("Não consegui salvar a escalação agora.","bad"); }
 });
@@ -549,9 +556,12 @@ $("adjForm").addEventListener("submit",async e=>{
 
 /* rodada / filtros */
 opts($("roundSel"),ROUNDS.map(r=>[String(r),`Rodada ${r} · ${SCHED.find(s=>s.rd===r).ini}`]));
-$("roundSel").addEventListener("change",()=>{viewRound=+$("roundSel").value;userMovedRound=true;renderRounds();});
-$("prevR").addEventListener("click",()=>{viewRound=Math.max(1,viewRound-1);userMovedRound=true;renderRounds();});
-$("nextR").addEventListener("click",()=>{viewRound=Math.min(ROUNDS.length,viewRound+1);userMovedRound=true;renderRounds();});
+let moveTimer=null;
+function moved(){ userMovedRound=true; clearTimeout(moveTimer); moveTimer=setTimeout(()=>{userMovedRound=false;renderRounds();},120000); renderRounds(); }
+$("nowR").addEventListener("click",()=>{ userMovedRound=false; clearTimeout(moveTimer); renderRounds(); });
+$("roundSel").addEventListener("change",()=>{viewRound=+$("roundSel").value;moved();});
+$("prevR").addEventListener("click",()=>{viewRound=Math.max(1,viewRound-1);moved();});
+$("nextR").addEventListener("click",()=>{viewRound=Math.min(ROUNDS.length,viewRound+1);moved();});
 opts($("fTeam"),[["KNY","Só KNY"],["","Todas as equipes"],...TEAMS.filter(t=>t.id!=="KNY").map(t=>[t.id,t.name])]);
 opts($("fCatSel"),[["","Todas as categorias"],...CATS.map(c=>[c.id,c.label])]);
 ["fTeam","fCatSel","fState"].forEach(id=>$(id).addEventListener("change",renderFull));
@@ -607,8 +617,6 @@ function applyAuth(){
   $("adjForm").hidden=!canWrite;
   $("formH").textContent=canWrite?"Lançar resultado":"Jogo selecionado";
   const isOwner=!!email&&email===OWNER.toLowerCase();
-  $("adminPanel").hidden=!isOwner;
-  if(isOwner) $("editorList").innerHTML=EDITORS.map(e=>`<div class="e"><span>${esc(e)}${e.toLowerCase()===OWNER.toLowerCase()?' <span class="pill">você</span>':''}</span>${e.toLowerCase()===OWNER.toLowerCase()?'':`<button type="button" class="link" data-rmed="${esc(e)}">remover</button>`}</div>`).join("");
   renderAll();
 }
 (function(){
@@ -624,11 +632,6 @@ function applyAuth(){
   db.collection("config").doc("editores").onSnapshot(d=>{ const x=d.data()||{}; EDITORS=x.emails||[]; OWNER=x.owner||OWNER_EMAIL; applyAuth();
     if(!d.exists&&me&&(me.email||"").toLowerCase()===OWNER_EMAIL) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL]}).catch(()=>{}); },()=>{});
   auth.onAuthStateChanged(u=>{ if(u&&(u.email||"").toLowerCase()===OWNER_EMAIL&&!EDITORS.length) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL]}).catch(()=>{}); });
-  $("editorForm").addEventListener("submit",async e=>{ e.preventDefault(); const v=$("edEmail").value.trim().toLowerCase(); if(!v||!v.includes("@")) return;
-    try{ await db.collection("config").doc("editores").update({emails:firebase.firestore.FieldValue.arrayUnion(v)}); $("edEmail").value=""; }catch(_){ $("edEmail").value=""; } });
-  document.addEventListener("click",async e=>{ const b=e.target.closest("[data-rmed]"); if(!b) return;
-    if(!b.classList.contains("danger")){b.classList.add("danger");b.textContent="confirmar";return;}
-    try{ await db.collection("config").doc("editores").update({emails:firebase.firestore.FieldValue.arrayRemove(b.dataset.rmed)}); }catch(_){} });
   $("loginBtn").hidden=false;
   db.collection("resultados").onSnapshot(snap=>{
     const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={g1:x.g1,g2:x.g2,obs:x.obs,dupla:[...(x.dupla||[])]}; }
