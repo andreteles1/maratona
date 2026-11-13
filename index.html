@@ -7,7 +7,7 @@
 <title>Maratona das Raquetes 2026</title>
 <meta name="theme-color" content="#F37A1F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23F37A1F'/%3E%3Cpath d='M32 5c10.5 0 17 7.8 17 18 0 9.5-6 16.5-13 18.2V45h-8v-3.8C21 39.5 15 32.5 15 23 15 12.8 21.5 5 32 5Z' fill='%23141414'/%3E%3Ccircle cx='26' cy='15' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='32' cy='15' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='38' cy='15' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='23' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='29' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='35' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='41' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='26' cy='27' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='32' cy='27' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='38' cy='27' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='29' cy='33' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='35' cy='33' r='2.1' fill='%23F37A1F'/%3E%3Crect x='27.5' y='43' width='9' height='17' rx='4.5' fill='%23141414'/%3E%3C/svg%3E">
-<meta name="build" content="20261113-1745">
+<meta name="build" content="20261113-1815">
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
@@ -256,7 +256,12 @@ body{margin:0}
   <div id="scoutView" hidden>
     <section class="panel" id="accessPanel" hidden><div class="panel-head"><h2>Controle de acesso</h2><span class="muted small">só o dono (deteles@hotmail.com)</span></div>
       <label class="switch"><input type="checkbox" id="accOn"> <span><b>Restringir acesso</b> — com isso ligado, só os e-mails da lista (e os administradores) conseguem ver o app</span></label>
-      <label>E-mails liberados para leitura (um por linha)<textarea id="accList" rows="6" placeholder="fulano@gmail.com"></textarea></label>
+      <div class="row">
+        <label>O que quem está na lista vê das escalações futuras<select id="accModo"><option value="todos">Todos os jogos da KNY</option><option value="proprios">Só os próprios jogos</option></select></label>
+        <label id="accHorasL">Até quantas horas à frente (vazio = sem limite)<input type="number" id="accHoras" min="1" max="48" inputmode="numeric" placeholder="ex.: 4"></label>
+      </div>
+      <div class="muted small">Jogos que já começaram e resultados aparecem sempre. Administradores veem tudo.</div>
+      <label>E-mails liberados para leitura, um por linha. Para "só os próprios jogos", informe o atleta: <code>email = Nome do Atleta</code><textarea id="accList" rows="8" placeholder="fulano@gmail.com = Caio Richter"></textarea></label>
       <div class="row" style="justify-content:space-between;align-items:center"><span class="muted small" id="accInfo"></span><button type="button" id="accSave">Salvar acesso</button></div>
     </section>
     <section class="panel"><div class="panel-head"><h2>Scouts KNY</h2><span class="muted small">só administradores · atualiza ao vivo</span></div>
@@ -492,6 +497,9 @@ const norm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLo
 const esc=s=>String(s??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 function opts(sel,list,ph){sel.innerHTML=(ph!=null?`<option value="">${ph}</option>`:"")+list.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("");}
 
+let ACC={restrito:false,modo:"todos",horas:0}, LIMITED=false, RELISTEN=()=>{};
+const escStart=id=>firebase.firestore.Timestamp.fromMillis(SID[id].start);
+const hiddenLU=s=>LIMITED&&(s.a==="KNY"||s.b==="KNY")&&!has(s.id)&&!(ESC[s.id]&&ESC[s.id].dupla&&ESC[s.id].dupla.length);
 let OPEN=null, OPENALL={}, ESC={}, RES={}, ADJ=[], db=null, canWrite=false, EDITORS=[], OWNER="", me=null, loaded=false, selId=null, viewRound=null, userMovedRound=false;
 const has=id=>RES[id]&&Number.isFinite(RES[id].g1)&&Number.isFinite(RES[id].g2);
 const SEED_ESC={}; // escalações vêm do banco (escalacao)
@@ -523,7 +531,7 @@ function renderStandings(){
 }
 function matchCard(s){
   const r=RES[s.id], k=s.a==="KNY"||s.b==="KNY", c=CAT[s.cat], d=has(s.id);
-  const w1=d&&r.g1>r.g2, w2=d&&r.g2>r.g1, pl=pairOf(s.id), pair=pl.length?((r?.dupla||[]).length?"":"Escalados: ")+pl.join(" / "):"";
+  const w1=d&&r.g1>r.g2, w2=d&&r.g2>r.g1, pl=pairOf(s.id), pair=pl.length?((r?.dupla||[]).length?"":"Escalados: ")+pl.join(" / "):(hiddenLU(s)?"Escalação ainda não liberada":"");
   return `<button type="button" class="match ${k?"kny":""} ${selId===s.id?"sel":""}" data-pick="${s.id}">
     <span class="top"><span class="${c.mod}">${esc(c.short)}</span><span class="muted">${esc(COURT[s.q])} · ${s.t==="I"?"ida":"volta"}</span></span>
     <span class="vs"><span class="tn ${s.a==="KNY"?"k":""}">${esc(TN[s.a])}</span><span class="sc ${w1?"w":""}">${d?r.g1:"–"}</span>
@@ -546,7 +554,7 @@ function renderKnyNext(){
   const list=SCHED.filter(s=>(s.a==="KNY"||s.b==="KNY")&&s.end>now&&!has(s.id)).slice(0,8);
   if(!list.length){$("knyNext").innerHTML=`<tbody><tr><td class="muted">Todos os jogos da KNY já têm placar.</td></tr></tbody>`;return;}
   $("knyNext").innerHTML=`<thead><tr><th>Hora</th><th>Categoria</th><th>Quadra</th><th>Adversário</th><th>Dupla KNY</th></tr></thead><tbody>`+
-    list.map(s=>`<tr class="click" data-pick="${s.id}"><td class="n-h">${s.ini}</td><td class="n-c"><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="n-q">${esc(COURT[s.q])}</td><td class="n-o">${esc(TN[kv(s).opp])}</td><td class="dp">${esc(pairOf(s.id).join(" / "))||"–"}</td></tr>`).join("")+"</tbody>";
+    list.map(s=>`<tr class="click" data-pick="${s.id}"><td class="n-h">${s.ini}</td><td class="n-c"><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="n-q">${esc(COURT[s.q])}</td><td class="n-o">${esc(TN[kv(s).opp])}</td><td class="dp">${esc(pairOf(s.id).join(" / "))||(hiddenLU(s)?"a liberar":"–")}</td></tr>`).join("")+"</tbody>";
 }
 function renderMatrix(){
   const opps=TEAMS.filter(t=>t.id!=="KNY"); let done=0;
@@ -559,7 +567,7 @@ function renderMatrix(){
   $("knyProg").textContent=`${done} de 80 jogos com placar`; $("knyBar").style.width=(done/80*100).toFixed(1)+"%";
 }
 function duplasCell(s){ const k=s.a==="KNY"||s.b==="KNY", parts=[];
-  if(k){ const p=pairOf(s.id); if(p.length) parts.push(`KNY: ${esc(p.join(" / "))}`); const o=s.a==="KNY"?s.b:s.a, a=advOf(s.id,o); if(a.length) parts.push(`${esc(TN[o])}: ${esc(a.join(" / "))}`); }
+  if(k){ const p=pairOf(s.id); if(p.length) parts.push(`KNY: ${esc(p.join(" / "))}`); else if(hiddenLU(s)) parts.push("KNY: escalação ainda não liberada"); const o=s.a==="KNY"?s.b:s.a, a=advOf(s.id,o); if(a.length) parts.push(`${esc(TN[o])}: ${esc(a.join(" / "))}`); }
   else for(const t of [s.a,s.b]){ const a=advOf(s.id,t); if(a.length) parts.push(`${esc(TN[t])}: ${esc(a.join(" / "))}`); }
   return parts.join("<br>"); }
 function renderFull(){
@@ -687,7 +695,7 @@ $("saveEsc").addEventListener("click",async()=>{
   if(!db||!selId) return; const s=SID[selId];
   const dupla=[$("fP1").value,$("fP2").value].filter(Boolean);
   const errs=pairIssues(s,$("fP1").value,$("fP2").value); if(errs.length){ msg("Não salvei: "+errs.join(" "),"bad"); return; }
-  try{ await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now()},{merge:true});
+  try{ await db.collection("escalacao").doc(selId).set({dupla,ts:Date.now(),start:escStart(selId)},{merge:true});
     msg(dupla.length?`Escalação salva: ${dupla.join(" / ")} · ${CAT[s.cat].short}, ${s.ini}.`:"Escalação removida.","ok");
   }catch(_){ msg("Não consegui salvar a escalação agora.","bad"); }
 });
@@ -800,7 +808,7 @@ $("impGo").addEventListener("click",async()=>{
       for(const r of good.slice(i,i+200)){ const id=r.s.id;
         if(r.g1!=null){ const prev=RES[id]||{}; b.set(db.collection("resultados").doc(id),{g1:r.g1,g2:r.g2,obs:r.obs!=null?r.obs:(prev.obs||""),dupla:r.it.dupla||prev.dupla||pairOf(id),ts:Date.now()}); }
         const e={}; if(r.it.dupla) e.dupla=r.it.dupla; if(r.it.adv) e.adv=r.it.adv;
-        if(Object.keys(e).length){ e.ts=Date.now(); b.set(db.collection("escalacao").doc(id),e,{merge:true}); } }
+        if(Object.keys(e).length){ e.ts=Date.now(); e.start=escStart(id); b.set(db.collection("escalacao").doc(id),e,{merge:true}); } }
       await b.commit(); }
     const m=$("impMsg"); m.hidden=false; m.className="hint ok"; m.textContent=`${good.length} jogo(s) importado(s).`; IMP=null; $("impText").value=""; renderImport();
   }catch(err){ const m=$("impMsg"); m.hidden=false; m.className="hint bad"; m.textContent="Não consegui importar: "+(err&&err.code||"erro"); $("impGo").disabled=false; }
@@ -892,7 +900,8 @@ function applyAuth(){
   const email=(me&&me.email||"").toLowerCase();
   canWrite=!!email&&EDITORS.map(e=>e.toLowerCase()).includes(email);
   $("loginBtn").hidden=!!me; $("logoutBtn").hidden=!me;
-  $("who").textContent=me?(canWrite?`Lançando como ${me.email}`:`Conectado como ${me.email}`):"";
+  $("who").textContent=me?(canWrite?`Lançando como ${me.email}`:`Conectado como ${me.email}`+(ACC.restrito?(ACC.modo==="proprios"?" · escalações: só os seus jogos":ACC.horas?` · escalações até ${ACC.horas}h à frente`:""):"")):"";
+  RELISTEN();
   $("gameForm").classList.toggle("ro",!canWrite); $("adjForm").classList.toggle("ro",!canWrite);
   $("adjForm").hidden=!canWrite;
   $("formH").textContent=canWrite?"Lançar resultado":"Jogo selecionado";
@@ -917,7 +926,7 @@ function applyAuth(){
     if(!d.exists&&me&&(me.email||"").toLowerCase()===OWNER_EMAIL) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL,...EXTRA_EDITORS]}).catch(()=>{}); },()=>{});
   auth.onAuthStateChanged(u=>{ if(u&&(u.email||"").toLowerCase()===OWNER_EMAIL&&!EDITORS.length) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL,...EXTRA_EDITORS]}).catch(()=>{}); });
   $("loginBtn").hidden=false;
-  let UNSUB=[], LOCKED=false, RESTRITO=false, ACC_LOADED=false;
+  let UNSUB=[], LOCKED=false, RESTRITO=false, ACC_LOADED=false, HIDDEN=new Set();
   function setLocked(on){
     LOCKED=on; document.body.classList.toggle("locked",on); $("lockPanel").hidden=!on;
     if(on){ RES={}; ESC={}; ADJ=[]; ROSTER.splice(0); for(const k of Object.keys(RN)) delete RN[k]; for(const k of Object.keys(ALLR)) delete ALLR[k];
@@ -932,28 +941,47 @@ function applyAuth(){
       setLocked(false); const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={g1:x.g1,g2:x.g2,obs:x.obs,dupla:[...(x.dupla||[])]}; }
       RES=o; loaded=true; clearTimeout(timer); stamp(); renderAll();
     },denied));
-    UNSUB.push(db.collection("escalacao").onSnapshot(snap=>{ const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={dupla:Array.isArray(x.dupla)?[...x.dupla]:null, adv:Object.fromEntries(Object.entries(x.adv||{}).map(([t,v])=>[t,[...v]]))}; } ESC=o; renderAll(); },denied));
+    const escDoc=x=>({dupla:Array.isArray(x.dupla)?[...x.dupla]:null, adv:Object.fromEntries(Object.entries(x.adv||{}).map(([t,v])=>[t,[...v]]))});
+    ESC={};
+    if(!LIMITED){
+      UNSUB.push(db.collection("escalacao").onSnapshot(snap=>{ const o={}; for(const d of snap.docs) o[d.id]=escDoc(d.data()); ESC=o; renderAll(); },denied));
+    } else {
+      const sub=id=>db.collection("escalacao").doc(id).onSnapshot(d=>{ if(d.exists) ESC[id]=escDoc(d.data()); else delete ESC[id]; renderAll(); },()=>{ delete ESC[id]; HIDDEN.add(id); renderAll(); });
+      HIDDEN=new Set();
+      for(const s of SCHED) if(s.a==="KNY"||s.b==="KNY") UNSUB.push(sub(s.id));
+      const iv=setInterval(()=>{ const ids=[...HIDDEN]; HIDDEN.clear(); for(const id of ids) UNSUB.push(sub(id)); },180000);
+      UNSUB.push(()=>clearInterval(iv));
+    }
     UNSUB.push(db.collection("inscritos").onSnapshot(snap=>{ for(const d of snap.docs){ const x=d.data(); if(Array.isArray(x.atletas)&&x.atletas.length) setRoster(d.id,x.atletas.map(a=>[a.n,a.s,a.p??null,a.b??null])); } renderAll(); renderSel(false); setV(); },denied));
     UNSUB.push(db.collection("ajustes").onSnapshot(snap=>{ ADJ=snap.docs.map(d=>({id:d.id,...d.data()})); renderScoreboard(); renderStandings(); renderAdj(); },denied));
   }
   let lastKey=null;
-  function relisten(){ const k=(me?me.uid:"-")+"|"+RESTRITO; if(k===lastKey) return; lastKey=k; listen(); }
+  function relisten(){ const own=!!me&&(me.email||"").toLowerCase()===OWNER_EMAIL;
+    LIMITED=RESTRITO&&!canWrite&&!own;
+    const k=[me?me.uid:"-",RESTRITO,LIMITED,ACC.modo,ACC.horas].join("|"); if(k===lastKey) return; lastKey=k; listen(); }
+  RELISTEN=relisten;
   auth.onAuthStateChanged(()=>{ relisten(); loadReaders(); });
-  db.collection("config").doc("acesso").onSnapshot(d=>{ RESTRITO=!!(d.data()||{}).restrito; ACC_LOADED=true; $("accOn").checked=RESTRITO; accInfo(); relisten(); },()=>{ ACC_LOADED=true; relisten(); });
+  db.collection("config").doc("acesso").onSnapshot(d=>{ const x=d.data()||{}; RESTRITO=!!x.restrito; ACC={restrito:RESTRITO,modo:x.modo==="proprios"?"proprios":"todos",horas:+x.horas||0}; ACC_LOADED=true;
+    $("accOn").checked=RESTRITO; $("accModo").value=ACC.modo; $("accHoras").value=ACC.horas||""; $("accHorasL").hidden=ACC.modo==="proprios"; accInfo(); applyAuth(); relisten(); },()=>{ ACC_LOADED=true; relisten(); });
+  $("accModo").addEventListener("change",()=>{ $("accHorasL").hidden=$("accModo").value==="proprios"; });
   $("lockLogin").addEventListener("click",()=>$("loginBtn").click());
   // painel do dono
   let READERS=[];
-  function accInfo(){ $("accInfo").textContent=`${RESTRITO?"Restrição LIGADA":"Restrição desligada — qualquer pessoa com o link vê o app"} · ${READERS.length} e-mail(s) liberado(s)`; }
+  function accInfo(){ $("accInfo").textContent=`${RESTRITO?"Restrição LIGADA · "+(ACC.modo==="proprios"?"só os próprios jogos":ACC.horas?`escalações até ${ACC.horas}h à frente`:"todas as escalações"):"Restrição desligada — qualquer pessoa com o link vê o app"} · ${READERS.length} e-mail(s) liberado(s)`; }
   function loadReaders(){ const em=(me&&me.email||"").toLowerCase(); if(em!==OWNER_EMAIL) return;
-    db.collection("config").doc("leitores").get().then(d=>{ READERS=(d.data()||{}).emails||[]; $("accList").value=READERS.join("\n"); accInfo(); }).catch(()=>{}); }
+    db.collection("config").doc("leitores").get().then(d=>{ const x=d.data()||{}; READERS=x.emails||[]; const nm=x.nomes||{}; $("accList").value=READERS.map(e=>nm[e]?`${e} = ${nm[e]}`:e).join("\n"); accInfo(); }).catch(()=>{}); }
   $("accSave").addEventListener("click",async()=>{
     const em=(me&&me.email||"").toLowerCase(); if(em!==OWNER_EMAIL) return;
-    const list=[...new Set($("accList").value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)))];
-    const on=$("accOn").checked;
+    const nomes={}, bad=[], list=[];
+    for(const ln of $("accList").value.split(/\n+/)){ const [e0,...rest]=ln.split("="); const e=(e0||"").trim().toLowerCase(); if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) continue;
+      if(!list.includes(e)) list.push(e); const n=rest.join("=").trim();
+      if(n){ const hit=ROSTER.find(a=>norm(a.n)===norm(n)); if(hit) nomes[e]=hit.n; else bad.push(n); } }
+    const on=$("accOn").checked, modo=$("accModo").value==="proprios"?"proprios":"todos", horas=Math.max(0,Math.min(48,parseInt($("accHoras").value,10)||0));
     $("accSave").disabled=true;
-    try{ await db.collection("config").doc("leitores").set({emails:list,ts:Date.now()});
-      await db.collection("config").doc("acesso").set({restrito:on,ts:Date.now(),por:em});
-      READERS=list; $("accList").value=list.join("\n"); accInfo(); $("accInfo").textContent+=" · salvo ✓";
+    try{ await db.collection("config").doc("leitores").set({emails:list,nomes,ts:Date.now()});
+      await db.collection("config").doc("acesso").set({restrito:on,modo,horas,ts:Date.now(),por:em});
+      READERS=list; $("accList").value=list.map(e=>nomes[e]?`${e} = ${nomes[e]}`:e).join("\n"); accInfo();
+      $("accInfo").textContent+=" · salvo ✓"+(bad.length?` · atleta não encontrado: ${bad.join(", ")}`:"")+(modo==="proprios"&&list.some(e=>!nomes[e])?" · atenção: e-mails sem atleta não veem nenhuma escalação futura":"");
     }catch(e){ $("accInfo").textContent="Não consegui salvar ("+(e.code||e.message)+"). As regras do banco precisam estar atualizadas."; }
     $("accSave").disabled=false;
   });
