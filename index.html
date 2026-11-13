@@ -94,7 +94,31 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .sel-game{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px}
 .sel-game .big{font-family:var(--display);font-size:1.25rem;font-weight:600}
 
+[hidden]{display:none!important}
 .tbl-wrap{overflow-x:auto}
+#knyNext td.dp{white-space:normal;min-width:150px;font-weight:400}
+@media (max-width:640px){
+#knyNext thead{display:none}
+#knyNext,#knyNext tbody{display:block;width:100%}
+#knyNext tr.click{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:8px 2px;border-bottom:1px solid var(--line)}
+#knyNext tr.click td{border:0;padding:0;white-space:normal;font-size:.85rem}
+#knyNext td.n-o{flex:1 1 auto;text-align:right;font-weight:600}
+#knyNext td.n-o::before{content:"× ";color:var(--muted);font-weight:400}
+#knyNext td.dp{flex:1 1 100%;min-width:0;font-size:.8rem;color:var(--kny)}
+#fullTable thead{display:none}
+#fullTable,#fullTable tbody{display:block;width:100%}
+#fullTable tr.click{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding:10px 4px;border-bottom:1px solid var(--line)}
+#fullTable tr.click td{border:0;padding:0;white-space:normal;background:none}
+#fullTable td.c-rd,#fullTable td.c-h,#fullTable td.c-q,#fullTable td.c-cat{font-size:.75rem;color:var(--muted)}
+#fullTable td.c-cat{flex:1 1 auto}
+#fullTable td.c-a{flex:1 1 calc(50% - 30px);text-align:right;min-width:0}
+#fullTable td.c-p{flex:none;text-align:center;min-width:28px}
+#fullTable td.c-b{flex:1 1 calc(50% - 30px);min-width:0}
+#fullTable td.c-d{flex:1 1 100%;min-width:0!important;font-size:.78rem}
+#fullTable td.c-d:empty{display:none}
+#fullTable tr.xrow{display:block}#fullTable tr.xrow>td{display:block;padding:10px 6px}
+#fullTable tr.click.open{background:var(--surface2)}
+}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
@@ -463,8 +487,8 @@ function renderKnyNext(){
   const now=Date.now();
   const list=SCHED.filter(s=>(s.a==="KNY"||s.b==="KNY")&&s.end>now&&!has(s.id)).slice(0,8);
   if(!list.length){$("knyNext").innerHTML=`<tbody><tr><td class="muted">Todos os jogos da KNY já têm placar.</td></tr></tbody>`;return;}
-  $("knyNext").innerHTML=`<thead><tr><th>Hora</th><th>Categoria</th><th>Quadra</th><th>Adversário</th></tr></thead><tbody>`+
-    list.map(s=>`<tr class="click" data-pick="${s.id}"><td>${s.ini}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td>${esc(COURT[s.q])}</td><td>${esc(TN[kv(s).opp])}</td></tr>`).join("")+"</tbody>";
+  $("knyNext").innerHTML=`<thead><tr><th>Hora</th><th>Categoria</th><th>Quadra</th><th>Adversário</th><th>Dupla KNY</th></tr></thead><tbody>`+
+    list.map(s=>`<tr class="click" data-pick="${s.id}"><td class="n-h">${s.ini}</td><td class="n-c"><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="n-q">${esc(COURT[s.q])}</td><td class="n-o">${esc(TN[kv(s).opp])}</td><td class="dp">${esc(pairOf(s.id).join(" / "))||"–"}</td></tr>`).join("")+"</tbody>";
 }
 function renderMatrix(){
   const opps=TEAMS.filter(t=>t.id!=="KNY"); let done=0;
@@ -494,7 +518,7 @@ function renderFull(){
       let cls=""; if(d&&k){const x=kv(s);cls=x.m>x.t?"w":x.m<x.t?"l":"d";}
       const open=OPEN===s.id, teams=k?[s.a==="KNY"?s.b:s.a]:[s.a,s.b];
       const xrow=open?`<tr class="xrow"><td colspan="8"><div class="muted small" style="margin-bottom:8px">${k?"Possíveis duplas adversárias":"Possíveis duplas"} em ${esc(CAT[s.cat].label)}, pela lista oficial de inscritos e pelas regras da categoria (${esc(CAT[s.cat].rule)})</div><div class="opp">${teams.map(t=>oppBlock(s.cat,t,OPENALL[s.id+t],s.id)).join("")}</div></td></tr>`:"";
-      return `<tr class="click ${k?"knyrow":""} ${open?"open":""}" data-pick="${s.id}" data-x="${s.id}"><td><span class="caret">${open?"▾":"▸"}</span>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted small" style="white-space:normal;min-width:160px">${duplasCell(s)}</td></tr>${xrow}`;}).join(""):`<tr><td colspan="8" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
+      return `<tr class="click ${k?"knyrow":""} ${open?"open":""}" data-pick="${s.id}" data-x="${s.id}"><td class="c-rd"><span class="caret">${open?"▾":"▸"}</span>${s.rd}</td><td class="c-h">${s.ini}</td><td class="c-q">${esc(COURT[s.q])}</td><td class="c-cat"><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r c-a" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c c-p"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td class="c-b" style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted small c-d" style="white-space:normal;min-width:160px">${duplasCell(s)}</td></tr>${xrow}`;}).join(""):`<tr><td colspan="8" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
 }
 function renderAthletes(){
   const m={};
