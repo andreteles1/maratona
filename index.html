@@ -57,10 +57,10 @@ section.panel{background:var(--surface);border:1px solid var(--line);border-radi
 .scoreboard{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 @media (max-width:640px){.scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.scoreboard .team:first-child{grid-column:1/-1}}
 .team{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.team.kny{background:var(--ink);border-color:var(--brand);color:#fff}.team.kny .pos,.team.kny .sub{color:#c9bdb3}
+.team.kny{border-color:var(--brand);box-shadow:inset 0 3px 0 var(--brand)}
 .team .pos{font-family:var(--display);font-size:.95rem;color:var(--muted)}
 .team .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.team.kny .name{color:var(--brand)}
+.team.kny .name{font-weight:800}
 .team .pts{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
 .team .sub{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
 
