@@ -218,6 +218,14 @@ body{margin:0}
     </section>
   </div>
 
+  <section class="panel" id="importPanel" hidden>
+    <div class="panel-head"><h2>Importar lote</h2><span class="muted small">cole o bloco gerado pelo Claude</span></div>
+    <textarea id="impText" rows="4" placeholder='[{"id":"j003","g":{"KNY":6,"SOV":4}}]' style="font:13px/1.4 ui-monospace,Menlo,monospace;width:100%;min-width:0;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px"></textarea>
+    <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" id="impCheck">Conferir</button><button type="button" class="primary" id="impGo" disabled>Importar</button></div>
+    <div id="impPrev" class="tbl-wrap"></div>
+    <div class="hint" id="impMsg" hidden></div>
+  </section>
+
   <section class="panel">
     <div class="panel-head"><h2>Tabela completa</h2>
       <div class="filters">
@@ -320,15 +328,21 @@ const R=[
  ["Fabio Wergutz","M",5,null],["Henrique Teles","M",5,"C"],["Joaquim Teles","M",5,null],
  ["John Kroth","M",4,"C"],["Alessandro Asmann","M",null,"B"],["Michel Fagundes","M",null,"C"],
  ["Silvano Kroth","M",null,"B"],
- ["Carolina Genro","F",2,"B"],["Daniela Andrade","F",4,"D"],["Débora Scherer","F",3,null],
- ["Laura Frantz","F",4,"C"],["Mariana Frey","F",3,"C"],["Natália Ody","F",3,null],
+ ["Carolina Genro","F",2,"B"],["Daniela Andrade","F",4,"D"],["Débora Scherer","F",3,"D"],
+ ["Laura Frantz","F",4,"C"],["Mariana Frey","F",3,"C"],["Natália Ody","F",3,"D"],
  ["Pamela Sippel","F",3,"C"],["Paula Pascoal","F",4,null],["Sabrina Seleri","F",3,null],
  ["Suellen Benaventana","F",3,"D"],["Cassandra Farias","F",5,null],["Eduarda Heinen","F",5,null],
- ["Gabriela Frey","F",5,null],["Luciane Kroth","F",5,"B"],["Carol Pochmann","F",null,"B"],
- ["Carolina Borba","F",null,"B"],["Claudia Eugênio","F",null,"C"],["Daiane Wünsch","F",null,"C"],
+ ["Gabriela Frey","F",5,"D"],["Luciane Kroth","F",5,"B"],["Carol Pochmann","F",5,"B"],
+ ["Carolina Borba","F",5,"B"],["Claudia Eugênio","F",null,"C"],["Daiane Wünsch","F",null,"C"],
  ["Fernanda Canabarro","F",null,"C"],["Ana Frantz","F",null,"D"],["Manuela Kaufmann","F",null,"D"]];
 const ROSTER=R.map(([n,s,p,b])=>({n,s,p,b,pg:p==null?null:(s==="M"?(p<=3?"A":"B"):(p<=4?"A":"B")),bg:b==null?null:(b==="D"?"B":"A")})).sort((x,y)=>x.n.localeCompare(y.n,"pt"));
 const RN=Object.fromEntries(ROSTER.map(a=>[a.n,a]));
+const mkA=([n,s,p,b])=>({n,s,p,b,pg:p==null?null:(s==="M"?(p<=3?"A":"B"):(p<=4?"A":"B")),bg:b==null?null:(b==="D"?"B":"A")});
+function setRoster(team,list){
+  const arr=list.map(mkA).sort((x,y)=>x.n.localeCompare(y.n,"pt"));
+  if(team==="KNY"){ ROSTER.splice(0,ROSTER.length,...arr); for(const k of Object.keys(RN)) delete RN[k]; for(const a of ROSTER) RN[a.n]=a; }
+  else ALLR[team]=arr;
+}
 // Inscritos de todas as equipes (lista oficial): [nome, sexo, padel, beach, grupo padel, grupo beach]
 const ALLR_RAW={"SAN":[["Augusto Machado","M",2,"D","A","B"],["Bernardo Scheibeler","M",2,null,"A",null],["Bruno Pithan","M",2,null,"A",null],["Felipe Stein","M",3,null,"A",null],["João Leite","M",3,null,"A",null],["João Vitor","M",3,"D","A","B"],["Márcio Pinto","M",3,null,"A",null],["Theo Maximus","M",2,"D","A","B"],["Vitor Pegoraro","M",2,"C","A","A"],["Alencar Andretto","M",4,"D","B","B"],["Be Wiebbling","M",4,null,"B",null],["Eduardo van ass","M",6,null,"B",null],["Elton da Rosa","M",6,null,"B",null],["Felipe Deves","M",5,null,"B",null],["Germano Van Ass","M",5,null,"B",null],["Lucas Lenz","M",4,"D","B","B"],["Lucca Bernardi","M",4,"D","B","B"],["Pedro Kroth","M",4,null,"B",null],["belquiz","F",3,null,"A",null],["Graciane Cavalheiro","F",3,null,"A",null],["Laura Adriana","F",4,"D","A","B"],["Mari Labres","F",3,null,"A",null],["Patrícia Scheneider","F",3,null,"A",null],["Andressa Scheneider","F",5,null,"B",null],["Keetlen Link","F",5,null,"B",null],["Lisiane Brust","F",5,null,"B",null],["Allan Noveletto de Souza","M",null,"B",null,"A"],["Daniel Camargo","M",null,"B",null,"A"],["Douglas Sandri","M",null,"C",null,"A"],["Felipe Borba Daniel","M",null,"B",null,"A"],["Fernando Renner","M",null,"C",null,"A"],["Jalito Padilha","M",null,"C",null,"A"],["Jeferson de Oliveira","M",null,"C",null,"A"],["Jeison Alberto da Silva","M",null,"C",null,"A"],["Letícia Heinen","M",null,"C",null,"A"],["Paulo Cassepp de Barros","M",null,"B",null,"A"],["Thiago Capelão Renner dos Santos","M",null,"C",null,"A"],["Bernardo wiebbeling","M",null,"D",null,"B"],["Lucas Dure","M",null,"D",null,"B"],["Ana Carolina Silveira Reis","F",null,"C",null,"A"],["Ana Cristian Kniphoff da Cruz","F",null,"C",null,"A"],["Bárbara Luise Locatelli","F",null,"B",null,"A"],["Betina Back","F",null,"B",null,"A"],["Indianara Debastiani","F",null,"B",null,"A"],["Lara Vieira","F",null,"B",null,"A"],["Mariana Remus de Barros","F",null,"C",null,"A"],["Mariane Meert Merten","F",null,"B",null,"A"],["Roberta Pinheiro","F",null,"C",null,"A"],["Skarllatt Correia Alves","F",null,"C",null,"A"],["Victória Borba Schwengber","F",null,"C",null,"A"],["Alessandra Constantin","F",null,"D",null,"B"],["Juliana Oliveira Schneider","F",null,"D",null,"B"],["Thamyres Conrado","F",null,"D",null,"B"]],"KNY":[["Caio Richter","M",3,"C","A","A"],["Carlos Frantz","M",3,"C","A","A"],["Fernando Knies","M",3,"C","A","A"],["Henrique Hartung","M",3,"D","A","B"],["Leonardo Scherer","M",3,"D","A","B"],["Saher Hamid","M",3,null,"A",null],["Wylliam Rezende","M",2,null,"A",null],["Anderson Schwantz","M",5,null,"B",null],["André Teles","M",4,"C","B","A"],["Cristiano Ruschel","M",4,"D","B","B"],["Davi Wergutz","M",4,"D","B","B"],["Fabio Silva","M",5,null,"B",null],["Fabio Wergutz","M",5,null,"B",null],["Henrique Teles","M",5,"C","B","A"],["Joaquim Teles","M",5,null,"B",null],["John Kroth","M",4,"C","B","A"],["Carolina Genro","F",2,"B","A","A"],["Daniela Andrade","F",4,"D","A","B"],["Débora Scherer","F",3,null,"A",null],["Laura Frantz","F",4,"C","A","A"],["Mariana Frey","F",3,"C","A","A"],["Natália Ody","F",3,null,"A",null],["Pamela Sippel","F",3,"C","A","A"],["Paula Pascoal","F",4,null,"A",null],["Sabrina Seleri","F",3,null,"A",null],["Suellen Benaventana","F",3,"D","A","B"],["Cassandra Farias","F",5,null,"B",null],["Eduarda Heinen","F",5,null,"B",null],["Gabriela Frey","F",5,null,"B",null],["Luciane Kroth","F",5,"B","B","A"],["Alessandro Asmann","M",null,"B",null,"A"],["Michel Fagundes","M",null,"C",null,"A"],["Silvano Kroth","M",null,"B",null,"A"],["Seher Hamid","M",null,"D",null,"B"],["Carol Pochmann","F",null,"B",null,"A"],["Carolina Borba","F",null,"B",null,"A"],["Claudia Eugênio","F",null,"C",null,"A"],["Daiane Wünsch","F",null,"C",null,"A"],["Fernanda Canabarro","F",null,"C",null,"A"],["Ana Frantz","F",null,"D",null,"B"],["Manuela Kaufmann","F",null,"D",null,"B"]],"LOB":[["Arthur Wollschick","M",3,null,"A",null],["Caio Oliveira Basseggio","M",2,null,"A",null],["Dionatan Lawall de Almeida","M",2,null,"A",null],["Diozer Dalmolin","M",2,null,"A",null],["Harlen Sidnei Mendes Silva","M",3,null,"A",null],["João Pedro Petter da Costa","M",2,null,"A",null],["Marcos Vinicius Ribeiro","M",2,null,"A",null],["Moises Seidl","M",3,null,"A",null],["Robson de Moraes","M",3,"C","A","A"],["André Luis Schwertner","M",6,null,"B",null],["Caetano de Moraes","M",4,"B","B","A"],["Daniel Rockenbach","M",4,null,"B",null],["Diego Augusto Wilsmann","M",5,null,"B",null],["Fabio da Silva","M",5,null,"B",null],["Giancarlo Ely Nos","M",5,null,"B",null],["Gianluca Ely Nos","M",5,null,"B",null],["Gustavo de Gasperi","M",4,null,"B",null],["João Carlos Maciel Junior","M",6,null,"B",null],["Luciano Maran","M",4,null,"B",null],["Marcelo Pozzer Teixeira","M",6,null,"B",null],["Rodolfo Antoniazzi","M",6,"C","B","A"],["Andressa Martini","F",4,"B","A","A"],["Bruna dos Santos","F",2,null,"A",null],["Diovana Harth","F",3,null,"A",null],["Eduarda Pereira","F",4,null,"A",null],["Fernanda Jacobs","F",3,null,"A",null],["Larissa Daiane Kuhn","F",4,null,"A",null],["Luisa Kraemer Kolzer","F",3,null,"A",null],["Luisa Silva da Rosa","F",4,null,"A",null],["Maiana Ely Nos","F",2,null,"A",null],["Pâmela Luíza Heineck Parizzi","F",3,null,"A",null],["Ana Luisa Koch","F",5,null,"B",null],["Ana Roberta Heuser","F",6,null,"B",null],["Bárbara Scherner","F",5,null,"B",null],["Bruna Hendges","F",5,null,"B",null],["Daniela Kraemer Kolzer Ribeiro","F",6,null,"B",null],["Fabiele Cristina Imperatori","F",5,null,"B",null],["Leticia Pante","F",6,"B","B","A"],["Luise Ely Schneider","F",6,null,"B",null],["Luiza Willers","F",5,null,"B",null],["Simone Class","F",6,null,"B",null],["Fernando Koppe","M",null,"B",null,"A"],["João Rocha","M",null,"B",null,"A"],["Tales Ebert","M",null,"C",null,"A"],["Everton Piccoli","M",null,"D",null,"B"],["Matias Marcola","M",null,"D",null,"B"],["Rodrigo Heemann","M",null,"D",null,"B"],["Alana Goettems","F",null,"C",null,"A"],["Emanuele da Rosa","F",null,"B",null,"A"],["Estela Krein","F",null,"C",null,"A"],["Gabriela Cerutti","F",null,"C",null,"A"],["Iasmine Abdala","F",null,"B",null,"A"],["Katieli Capeletti","F",null,"C",null,"A"],["Patrícia Roehrs","F",null,"B",null,"A"],["Tanisa Rizzi de Moraes","F",null,"C",null,"A"],["Angelica Horbach","F",null,"D",null,"B"],["Daniela Buffon","F",null,"D",null,"B"],["Juliana Theves","F",null,"D",null,"B"],["Luiza Henicka","F",null,"D",null,"B"]],"BRA":[["Afonso S Sieben","M",3,"D","A","B"],["Edson Gaspar","M",2,"D","A","B"],["Eduardo Kuhn","M",3,"C","A","A"],["Guilherme Braga","M",2,"C","A","A"],["Henrique Viana","M",3,"D","A","B"],["Jorge - Luis Hinterholz","M",3,"D","A","B"],["Marcus Konzen","M",3,"C","A","A"],["Roberto Deves viana","M",3,"C","A","A"],["Thales Thiesen","M",3,"D","A","B"],["Werner Lucas Schlittler","M",3,"C","A","A"],["Anderson Mallmann","M",4,"C","B","A"],["Arthur Spies Bessler","M",5,null,"B",null],["Claudiomir Francisco Giovanaz","M",5,null,"B",null],["Cristiano Moyses","M",5,"C","B","A"],["Daniel Gustavo Wunsch","M",5,"C","B","A"],["Elias Ricardo Schmidt","M",5,"D","B","B"],["Fábio Samuel Wille","M",5,"D","B","B"],["FERNANDO ELIAS FRANCA MACHADO","M",4,"D","B","B"],["Gabriel Battisti Kroth","M",4,null,"B",null],["Jeanderson Richter","M",6,"D","B","B"],["Jonas Augusto Bouvie","M",5,"B","B","A"],["Júlio Severo","M",4,"C","B","A"],["Mathias Erneu Eckert da Silva","M",5,null,"B",null],["Aline Sschneider","F",4,"D","A","B"],["Bel","F",4,null,"A",null],["Débora Leuckert","F",4,"C","A","A"],["Laura Spies Sieben","F",4,"D","A","B"],["Paula Henkes","F",4,"C","A","A"],["Roberta Hinterholz","F",4,"D","A","B"],["Andressa Costa Mallmann","F",6,"C","B","A"],["Camila Muller","F",5,"C","B","A"],["Carla Regina marques","F",6,"C","B","A"],["GABRIELA KONRATH MACHADO","F",5,"D","B","B"],["Gisele dos Santos","F",6,"D","B","B"],["Laura da Silva Lopes","F",5,"D","B","B"],["Liana Bertram","F",6,null,"B",null],["Nara Lucia de Brito Helfenstein","F",5,null,"B",null],["Rose Neivel","F",6,"C","B","A"],["Taísa Leuckert","F",6,"C","B","A"],["Tatiana Gullich","F",5,"C","B","A"],["Cássio Rauber","M",null,"D",null,"B"],["Marco A Gonzatto","M",null,"D",null,"B"],["Bruna Walker","F",null,"C",null,"A"],["Elise Etges","F",null,"B",null,"A"],["Gabriela Lenz","F",null,"C",null,"A"],["Manuela Graef da Rosa","F",null,"C",null,"A"],["Michele Immich Rüdiger","F",null,"B",null,"A"],["Roselane Bertram","F",null,"C",null,"A"],["Isadora Soares","F",null,"D",null,"B"],["Kassia Lisboa","F",null,"D",null,"B"],["Maira Verônica Pereira da Silva","F",null,"D",null,"B"]],"SOV":[["Donovan Cazzarotto","M",3,"D","A","B"],["Douglas Seibt","M",3,"D","A","B"],["Emanuel Reis","M",3,"D","A","B"],["Felipi Weizenmann","M",2,"C","A","A"],["Márcio Gaio","M",3,null,"A",null],["Vicente Canova","M",3,null,"A",null],["Vicente Correa","M",2,"C","A","A"],["William Alves","M",3,"D","A","B"],["Alexandre Zimmermann","M",5,null,"B",null],["Carlos Canova","M",4,"D","B","B"],["Davi Cazzarotto","M",5,null,"B",null],["Eduardo Seibert","M",4,"D","B","B"],["Eduardo Severo","M",4,null,"B",null],["Fabiano Dettenborn","M",5,"B","B","A"],["Júnior Schuh","M",4,null,"B",null],["Leonardo Santos","M",5,null,"B",null],["Lucas Lorenzom","M",4,null,"B",null],["Marvin Machry","M",5,null,"B",null],["Renan Forster","M",4,null,"B",null],["Vinícius Xavier","M",4,null,"B",null],["Aline Cazzarotto","F",4,"D","A","B"],["Caroline Furrati","F",4,"D","A","B"],["Cíntia Hickmann","F",4,null,"A",null],["Livia Weschenfelder","F",3,"C","A","A"],["Maiara Minuzzi","F",4,null,"A",null],["Martina Borba","F",2,null,"A",null],["Patrícia Pinto","F",3,"C","A","A"],["Rithiele Jung","F",4,"B","A","A"],["Sabrine Fuerstenau","F",3,"B","A","A"],["Sabrine Heck","F",3,"D","A","B"],["Thalia Russel","F",4,"D","A","B"],["Ana Paula Weber","F",5,"D","B","B"],["Camila Furrati","F",5,"D","B","B"],["Marcela Teixeira","F",5,"C","B","A"],["Vanessa Machado","F",5,null,"B",null],["Henrique Dettenborn","M",null,"B",null,"A"],["Rafael Dure","M",null,"B",null,"A"],["Etiene Etges","F",null,"B",null,"A"],["Michele","F",null,"B",null,"A"],["Amanda Luisa Ruschel","F",null,"D",null,"B"],["Daniela Prochnow","F",null,"D",null,"B"]]};
 const ALLR=Object.fromEntries(Object.entries(ALLR_RAW).map(([t,l])=>[t,l.map(([n,s,p,b,pg,bg])=>({n,s,p,b,pg,bg})).sort((x,y)=>x.n.localeCompare(y.n,"pt"))]));
@@ -398,7 +412,7 @@ function opts(sel,list,ph){sel.innerHTML=(ph!=null?`<option value="">${ph}</opti
 
 let OPEN=null, OPENALL={}, ESC={}, RES={}, ADJ=[], db=null, canWrite=false, EDITORS=[], OWNER="", me=null, loaded=false, selId=null, viewRound=null, userMovedRound=false;
 const has=id=>RES[id]&&Number.isFinite(RES[id].g1)&&Number.isFinite(RES[id].g2);
-const SEED_ESC={j033:["Joaquim Teles","Davi Wergutz"],j059:["Fernanda Canabarro","Henrique Hartung"],j093:["Joaquim Teles","Cristiano Ruschel"],j123:["Carol Pochmann","Fernanda Canabarro"]};
+const SEED_ESC={"j003":["Carol Pochmann","Claudia Eugênio"],"j005":["Caio Richter","Carlos Frantz"],"j007":["Silvano Kroth","John Kroth"],"j009":["Cassandra Farias","Eduarda Heinen"],"j011":["Daniela Andrade","Manuela Kaufmann"],"j013":["Henrique Teles","Davi Wergutz"],"j015":["Henrique Hartung","Leonardo Scherer"],"j017":["Sabrina Seleri","John Kroth"],"j021":["Paula Pascoal","Carolina Genro"],"j023":["Claudia Eugênio","Luciane Kroth"],"j025":["Henrique Hartung","Fernando Knies"],"j027":["Alessandro Asmann","Michel Fagundes"],"j029":["Carol Pochmann","Gabriela Frey"],"j031":["Ana Frantz","Suellen Benaventana"],"j033":["Joaquim Teles","Davi Wergutz"],"j039":["Laura Frantz","Henrique Hartung"],"j041":["Mariana Frey","Daniela Andrade"],"j043":["Carolina Borba","Pamela Sippel"],"j045":["Wylliam Rezende","Leonardo Scherer"],"j047":["Silvano Kroth","Carlos Frantz"],"j049":["Luciane Kroth","Eduarda Heinen"],"j055":["Saher Hamid","Davi Wergutz"],"j057":["Fabio Silva","Débora Scherer"],"j059":["Fernanda Canabarro","Henrique Hartung"],"j061":["Suellen Benaventana","Pamela Sippel"],"j063":["Laura Frantz","Luciane Kroth"],"j065":["Caio Richter","Wylliam Rezende"],"j071":["Débora Scherer","Gabriela Frey"],"j073":["Fabio Wergutz","Anderson Schwantz"],"j075":["Saher Hamid","Leonardo Scherer"],"j077":["Paula Pascoal","Davi Wergutz"],"j079":["Carol Pochmann","Henrique Hartung"],"j081":["Sabrina Seleri","Natália Ody"],"j087":["Alessandro Asmann","Henrique Teles"],"j089":["Cassandra Farias","Gabriela Frey"],"j091":["Suellen Benaventana","Daniela Andrade"],"j093":["Joaquim Teles","Cristiano Ruschel"],"j095":["Saher Hamid","Leonardo Scherer"],"j097":["Mariana Frey","Davi Wergutz"],"j099":["Claudia Eugênio","Henrique Hartung"],"j103":["Carolina Borba","Laura Frantz"],"j105":["Fernando Knies","Leonardo Scherer"],"j107":["Silvano Kroth","Michel Fagundes"],"j109":["Luciane Kroth","Carolina Borba"],"j111":["Ana Frantz","Natália Ody"],"j113":["Fabio Wergutz","Cristiano Ruschel"],"j115":["Henrique Hartung","Leonardo Scherer"],"j117":["Suellen Benaventana","Davi Wergutz"],"j121":["Paula Pascoal","Carolina Genro"],"j123":["Carol Pochmann","Fernanda Canabarro"],"j125":["Saher Hamid","Carlos Frantz"],"j127":["Michel Fagundes","Caio Richter"],"j129":["Cassandra Farias","Eduarda Heinen"],"j131":["Manuela Kaufmann","Suellen Benaventana"],"j133":["Fabio Silva","Davi Wergutz"],"j139":["Carlos Frantz","Natália Ody"],"j141":["Sabrina Seleri","Natália Ody"],"j143":["Pamela Sippel","Luciane Kroth"],"j145":["Saher Hamid","Wylliam Rezende"],"j147":["Alessandro Asmann","Caio Richter"],"j149":["Carol Pochmann","Carolina Borba"],"j155":["Cristiano Ruschel","Saher Hamid"],"j157":["Henrique Teles","Pamela Sippel"],"j159":["Carolina Borba","Leonardo Scherer"],"j161":["Mariana Frey","Débora Scherer"],"j163":["Fernanda Canabarro","Carolina Borba"],"j165":["Carlos Frantz","Leonardo Scherer"],"j171":["Débora Scherer","Manuela Kaufmann"],"j173":["Anderson Schwantz","John Kroth"],"j175":["Cristiano Ruschel","Saher Hamid"],"j177":["John Kroth","Daniela Andrade"],"j179":["Michel Fagundes","Débora Scherer"],"j181":["Sabrina Seleri","Natália Ody"],"j187":["John Kroth","Henrique Teles"],"j189":["Luciane Kroth","Gabriela Frey"],"j191":["Ana Frantz","Natália Ody"],"j193":["Fabio Silva","Cristiano Ruschel"],"j195":["Henrique Hartung","Saher Hamid"],"j197":["Mariana Frey","Davi Wergutz"],"j199":["Carolina Borba","Leonardo Scherer"]};
 function pairOf(id){ const r=RES[id]; if(r&&r.dupla&&r.dupla.length) return r.dupla; if(ESC[id]&&ESC[id].dupla) return ESC[id].dupla; return SEED_ESC[id]||[]; }
 const advOf=(id,t)=>(ESC[id]&&ESC[id].adv&&ESC[id].adv[t])||[];
 function kv(s){ const r=RES[s.id]; if(s.a==="KNY") return {opp:s.b,m:r?.g1,t:r?.g2}; if(s.b==="KNY") return {opp:s.a,m:r?.g2,t:r?.g1}; return null; }
@@ -475,12 +489,12 @@ function renderFull(){
     info.hidden=false;
     info.textContent=`${list.length} jogo(s) encontrados para "${$("fSearch").value.trim()}"`+(athletes.length&&athletes.length<=3?` · atleta(s): ${athletes.join(", ")} (aparecem os jogos em que estão escalados ou já jogaram)`:"")+(ft?" · filtro de equipe ativo":"");
   } else info.hidden=true;
-  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Duplas</th><th>Turno</th></tr></thead><tbody>`+
+  $("fullTable").innerHTML=`<thead><tr><th>Rod.</th><th>Hora</th><th>Quadra</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Duplas</th></tr></thead><tbody>`+
     (list.length?list.map(s=>{ const r=RES[s.id],d=has(s.id),k=s.a==="KNY"||s.b==="KNY";
       let cls=""; if(d&&k){const x=kv(s);cls=x.m>x.t?"w":x.m<x.t?"l":"d";}
       const open=OPEN===s.id, teams=k?[s.a==="KNY"?s.b:s.a]:[s.a,s.b];
-      const xrow=open?`<tr class="xrow"><td colspan="9"><div class="muted small" style="margin-bottom:8px">${k?"Possíveis duplas adversárias":"Possíveis duplas"} em ${esc(CAT[s.cat].label)}, pela lista oficial de inscritos e pelas regras da categoria (${esc(CAT[s.cat].rule)})</div><div class="opp">${teams.map(t=>oppBlock(s.cat,t,OPENALL[s.id+t],s.id)).join("")}</div></td></tr>`:"";
-      return `<tr class="click ${k?"knyrow":""} ${open?"open":""}" data-pick="${s.id}" data-x="${s.id}"><td><span class="caret">${open?"▾":"▸"}</span>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted small" style="white-space:normal;min-width:160px">${duplasCell(s)}</td><td>${s.t==="I"?"Ida":"Volta"}</td></tr>${xrow}`;}).join(""):`<tr><td colspan="9" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
+      const xrow=open?`<tr class="xrow"><td colspan="8"><div class="muted small" style="margin-bottom:8px">${k?"Possíveis duplas adversárias":"Possíveis duplas"} em ${esc(CAT[s.cat].label)}, pela lista oficial de inscritos e pelas regras da categoria (${esc(CAT[s.cat].rule)})</div><div class="opp">${teams.map(t=>oppBlock(s.cat,t,OPENALL[s.id+t],s.id)).join("")}</div></td></tr>`:"";
+      return `<tr class="click ${k?"knyrow":""} ${open?"open":""}" data-pick="${s.id}" data-x="${s.id}"><td><span class="caret">${open?"▾":"▸"}</span>${s.rd}</td><td>${s.ini}</td><td>${esc(COURT[s.q])}</td><td><span class="mod ${CAT[s.cat].mod}"></span>${esc(CAT[s.cat].short)}</td><td class="r" style="${s.a==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.a])}</td><td class="c"><span class="res ${cls}">${d?`${r.g1} × ${r.g2}`:"–"}</span></td><td style="${s.b==="KNY"?"color:var(--kny);font-weight:600":""}">${esc(TN[s.b])}</td><td class="muted small" style="white-space:normal;min-width:160px">${duplasCell(s)}</td></tr>${xrow}`;}).join(""):`<tr><td colspan="8" class="muted">Nenhum jogo com esses filtros.</td></tr>`)+"</tbody>";
 }
 function renderAthletes(){
   const m={};
@@ -663,6 +677,53 @@ setInterval(()=>{renderTimeline(); if(!userMovedRound) renderRounds();},60000);
 renderTimeline(); renderAll();
 const timer=setTimeout(()=>{ if(!loaded) $("status").textContent="Ainda sem conexão com o placar compartilhado. Os resultados aparecem assim que conectar."; },10000);
 function stamp(){ const n=SCHED.filter(s=>has(s.id)).length; $("status").innerHTML=`<b>Ao vivo</b> · ${n} de 200 jogos com placar · atualizado ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`; }
+/* ---------- importação em lote ---------- */
+let IMP=null;
+function parseImport(txt){
+  let arr; try{ arr=JSON.parse(txt); }catch(_){ return {err:"Texto inválido. Copie o bloco inteiro, incluindo [ e ]."}; }
+  if(!Array.isArray(arr)) arr=[arr];
+  const rows=[];
+  for(const it of arr){
+    const s=SID[it.id]; const r={it,s,warn:[],bad:[]};
+    if(!s){ r.bad.push(`jogo ${it.id||"?"} não existe`); rows.push(r); continue; }
+    if(it.g){ const ks=Object.keys(it.g); if(!(ks.includes(s.a)&&ks.includes(s.b))) r.bad.push(`equipes não batem com o jogo (${TN[s.a]} × ${TN[s.b]})`);
+      const g1=+it.g[s.a], g2=+it.g[s.b]; if(!Number.isFinite(g1)||!Number.isFinite(g2)) r.bad.push("placar inválido"); else { r.g1=g1; r.g2=g2; if(g1+g2>30||g1<0||g2<0) r.warn.push("placar fora do comum"); }
+      if(has(s.id)) r.warn.push(`substitui ${RES[s.id].g1} × ${RES[s.id].g2}`); }
+    const k=s.a==="KNY"||s.b==="KNY";
+    if(it.dupla){ if(!k) r.bad.push("dupla KNY em jogo sem KNY"); else { const v=pairIssues(s,it.dupla[0],it.dupla[1]); if(v.length) r.bad.push(...v); } }
+    if(it.adv){ for(const [t,p] of Object.entries(it.adv)){ if(t!==s.a&&t!==s.b) r.bad.push(`${t} não joga esta partida`); else { const team=ALLR[t]||[]; const miss=p.filter(n=>!team.some(a=>a.n===n)); if(miss.length) r.warn.push(`${miss.join(", ")} não está na lista de ${TN[t]}`); } } }
+    if(it.obs) r.obs=String(it.obs);
+    rows.push(r);
+  }
+  return {rows};
+}
+function renderImport(){
+  const box=$("impPrev"); if(!IMP){ box.innerHTML=""; $("impGo").disabled=true; return; }
+  if(IMP.err){ box.innerHTML=`<div class="hint bad">${esc(IMP.err)}</div>`; $("impGo").disabled=true; return; }
+  const ok=IMP.rows.filter(r=>!r.bad.length).length;
+  box.innerHTML=`<table><thead><tr><th>Jogo</th><th>Categoria</th><th class="r">Equipe 1</th><th class="c">Placar</th><th>Equipe 2</th><th>Duplas</th><th>Situação</th></tr></thead><tbody>`+
+    IMP.rows.map(r=>{ const s=r.s; if(!s) return `<tr><td>${esc(r.it.id||"?")}</td><td colspan="5"></td><td class="res l">${esc(r.bad.join("; "))}</td></tr>`;
+      const d=[r.it.dupla?`KNY: ${r.it.dupla.join(" / ")}`:"",...Object.entries(r.it.adv||{}).map(([t,p])=>`${TN[t]||t}: ${p.join(" / ")}`)].filter(Boolean).join("<br>");
+      const st=r.bad.length?`<span class="res l">${esc(r.bad.join("; "))}</span>`:r.warn.length?`<span class="res d">${esc(r.warn.join("; "))}</span>`:`<span class="res w">ok</span>`;
+      return `<tr><td>R${s.rd} ${s.ini}</td><td>${esc(CAT[s.cat].short)}</td><td class="r">${esc(TN[s.a])}</td><td class="c">${r.g1!=null?`${r.g1} × ${r.g2}`:"–"}</td><td>${esc(TN[s.b])}</td><td class="small" style="white-space:normal">${esc(d).replace(/&lt;br&gt;/g,"<br>")}</td><td style="white-space:normal">${st}</td></tr>`;}).join("")+`</tbody></table>`;
+  $("impGo").disabled=!ok; $("impGo").textContent=ok?`Importar ${ok} jogo(s)`:"Importar";
+}
+$("impCheck").addEventListener("click",()=>{ IMP=parseImport($("impText").value.trim()); $("impMsg").hidden=true; renderImport(); });
+$("impText").addEventListener("input",()=>{ IMP=null; renderImport(); });
+$("impGo").addEventListener("click",async()=>{
+  if(!IMP||!IMP.rows||!db||!canWrite) return;
+  const good=IMP.rows.filter(r=>!r.bad.length); $("impGo").disabled=true;
+  try{
+    for(let i=0;i<good.length;i+=200){ const b=db.batch();
+      for(const r of good.slice(i,i+200)){ const id=r.s.id;
+        if(r.g1!=null){ const prev=RES[id]||{}; b.set(db.collection("resultados").doc(id),{g1:r.g1,g2:r.g2,obs:r.obs!=null?r.obs:(prev.obs||""),dupla:r.it.dupla||prev.dupla||pairOf(id),ts:Date.now()}); }
+        const e={}; if(r.it.dupla) e.dupla=r.it.dupla; if(r.it.adv) e.adv=r.it.adv;
+        if(Object.keys(e).length){ e.ts=Date.now(); b.set(db.collection("escalacao").doc(id),e,{merge:true}); } }
+      await b.commit(); }
+    const m=$("impMsg"); m.hidden=false; m.className="hint ok"; m.textContent=`${good.length} jogo(s) importado(s).`; IMP=null; $("impText").value=""; renderImport();
+  }catch(err){ const m=$("impMsg"); m.hidden=false; m.className="hint bad"; m.textContent="Não consegui importar: "+(err&&err.code||"erro"); $("impGo").disabled=false; }
+});
+
 function applyAuth(){
   const email=(me&&me.email||"").toLowerCase();
   canWrite=!!email&&EDITORS.map(e=>e.toLowerCase()).includes(email);
@@ -671,6 +732,7 @@ function applyAuth(){
   $("gameForm").classList.toggle("ro",!canWrite); $("adjForm").classList.toggle("ro",!canWrite);
   $("adjForm").hidden=!canWrite;
   $("formH").textContent=canWrite?"Lançar resultado":"Jogo selecionado";
+  $("importPanel").hidden=!canWrite;
   const isOwner=!!email&&email===OWNER.toLowerCase();
   renderAll();
 }
@@ -684,15 +746,17 @@ function applyAuth(){
     auth.signInWithPopup(p).catch(()=>auth.signInWithRedirect(p)); });
   $("logoutBtn").addEventListener("click",()=>auth.signOut());
   const OWNER_EMAIL="deteles@hotmail.com";
+  const EXTRA_EDITORS=["paulatpascoal@gmail.com","wknyggya@gmail.com"];
   db.collection("config").doc("editores").onSnapshot(d=>{ const x=d.data()||{}; EDITORS=x.emails||[]; OWNER=x.owner||OWNER_EMAIL; applyAuth();
-    if(!d.exists&&me&&(me.email||"").toLowerCase()===OWNER_EMAIL) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL]}).catch(()=>{}); },()=>{});
-  auth.onAuthStateChanged(u=>{ if(u&&(u.email||"").toLowerCase()===OWNER_EMAIL&&!EDITORS.length) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL]}).catch(()=>{}); });
+    if(!d.exists&&me&&(me.email||"").toLowerCase()===OWNER_EMAIL) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL,...EXTRA_EDITORS]}).catch(()=>{}); },()=>{});
+  auth.onAuthStateChanged(u=>{ if(u&&(u.email||"").toLowerCase()===OWNER_EMAIL&&!EDITORS.length) db.collection("config").doc("editores").set({owner:OWNER_EMAIL,emails:[OWNER_EMAIL,...EXTRA_EDITORS]}).catch(()=>{}); });
   $("loginBtn").hidden=false;
   db.collection("resultados").onSnapshot(snap=>{
     const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={g1:x.g1,g2:x.g2,obs:x.obs,dupla:[...(x.dupla||[])]}; }
     RES=o; loaded=true; clearTimeout(timer); stamp(); renderAll();
   },()=>{ $("status").textContent="Conexão com o placar interrompida. Recarregue a página."; });
   db.collection("escalacao").onSnapshot(snap=>{ const o={}; for(const d of snap.docs){ const x=d.data(); o[d.id]={dupla:Array.isArray(x.dupla)?[...x.dupla]:null, adv:Object.fromEntries(Object.entries(x.adv||{}).map(([t,v])=>[t,[...v]]))}; } ESC=o; renderAll(); },()=>{});
+  db.collection("inscritos").onSnapshot(snap=>{ for(const d of snap.docs){ const x=d.data(); if(Array.isArray(x.atletas)&&x.atletas.length) setRoster(d.id,x.atletas.map(a=>[a.n,a.s,a.p??null,a.b??null])); } renderAll(); renderSel(false); setV(); },()=>{});
   db.collection("ajustes").onSnapshot(snap=>{ ADJ=snap.docs.map(d=>({id:d.id,...d.data()})); renderScoreboard(); renderStandings(); renderAdj(); },()=>{});
 })();
 })();
