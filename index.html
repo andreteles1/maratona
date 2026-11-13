@@ -7,7 +7,7 @@
 <title>Maratona das Raquetes 2026</title>
 <meta name="theme-color" content="#F37A1F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23F37A1F'/%3E%3Cpath d='M32 5c10.5 0 17 7.8 17 18 0 9.5-6 16.5-13 18.2V45h-8v-3.8C21 39.5 15 32.5 15 23 15 12.8 21.5 5 32 5Z' fill='%23141414'/%3E%3Ccircle cx='26' cy='15' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='32' cy='15' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='38' cy='15' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='23' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='29' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='35' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='41' cy='21' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='26' cy='27' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='32' cy='27' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='38' cy='27' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='29' cy='33' r='2.1' fill='%23F37A1F'/%3E%3Ccircle cx='35' cy='33' r='2.1' fill='%23F37A1F'/%3E%3Crect x='27.5' y='43' width='9' height='17' rx='4.5' fill='%23141414'/%3E%3C/svg%3E">
-<meta name="build" content="20261112-2158">
+<meta name="build" content="20261113-1640">
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
@@ -108,6 +108,26 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .sel-game .big{font-family:var(--display);font-size:1.25rem;font-weight:600}
 
 [hidden]{display:none!important}
+body.scouting .wrap>*:not(header):not(#tabs):not(#scoutView){display:none!important}
+#scoutView{display:flex;flex-direction:column;gap:16px}
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px;width:max-content;max-width:100%}
+.tabs button{background:none;border:0;color:var(--muted);padding:8px 16px;border-radius:8px}
+.tabs button.on{background:var(--ink);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.kpi{background:var(--surface2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.kpi span{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.kpi b{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}.kpi small{font-size:.85rem;color:var(--muted);font-weight:500}
+.sct td,.sct th{white-space:nowrap}.sct th.srt{cursor:pointer;user-select:none}
+.sct td.pos{color:var(--win);font-weight:700}.sct td.neg{color:var(--loss);font-weight:700}
+.sct tr.open{background:var(--knysoft)}
+.sclog{margin:4px 0}.sclog td,.sclog th{white-space:normal}
+.scbar{display:inline-block;width:80px;height:8px;border-radius:99px;background:var(--surface2);vertical-align:middle;overflow:hidden}.scbar i{display:block;height:100%;background:var(--brand)}
+.alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:.85rem}
+.alerts li.al{padding:7px 10px;border-radius:8px;background:var(--surface2);border-left:4px solid var(--muted)}
+.sclog .sm{display:none}
+@media (max-width:640px){.sct .hm{display:none}.sclog .sm{display:block}.sct td,.sct th{padding:7px 5px}.sct td:first-child{white-space:normal}
+.kpis{grid-template-columns:repeat(3,1fr);gap:6px}.kpi{padding:8px}.kpi b{font-size:1.15rem}.kpi span{font-size:.6rem}#scAth tr.xrow>td{padding:6px 2px}}
+.alerts li.l{border-left-color:var(--loss)}.alerts li.d{border-left-color:var(--brand)}
 .tbl-wrap{overflow-x:auto}
 #knyNext td.dp{white-space:normal;min-width:150px;font-weight:400}
 @media (max-width:640px){
@@ -223,6 +243,23 @@ body{margin:0}
       <button type="button" class="link" id="logoutBtn" hidden>sair</button>
     </div>
   </header>
+  <nav class="tabs" id="tabs" hidden><button type="button" data-tab="main" class="on">Torneio</button><button type="button" data-tab="scout">Scouts KNY</button></nav>
+  <div id="scoutView" hidden>
+    <section class="panel"><div class="panel-head"><h2>Scouts KNY</h2><span class="muted small">só administradores · atualiza ao vivo</span></div>
+      <div class="kpis" id="scKpi"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Atletas</h2><select id="scMod" style="width:auto"><option value="">Todas as modalidades</option><option value="p">Padel</option><option value="b">Beach Tennis</option></select></div>
+      <div class="muted small">Toque no título da coluna para ordenar e no atleta para ver jogo a jogo. GP/GC = games pró/contra; Min = minutos em quadra (21 por jogo). No celular aparecem só as colunas principais.</div>
+      <div class="tbl-wrap"><table id="scAth" class="sct"></table></div></section>
+    <div class="grid2">
+      <section class="panel"><div class="panel-head"><h2>Por categoria</h2></div><div class="tbl-wrap"><table id="scCat" class="sct"></table></div></section>
+      <section class="panel"><div class="panel-head"><h2>Contra cada equipe</h2></div><div class="tbl-wrap"><table id="scOpp" class="sct"></table></div>
+        <h3 style="margin-top:8px">Alertas de escalação</h3><ul class="alerts" id="scAlerts"></ul></section>
+    </div>
+    <div class="grid2">
+      <section class="panel"><div class="panel-head"><h2>Duplas</h2><span class="muted small">por saldo</span></div><div class="tbl-wrap"><table id="scPairs" class="sct"></table></div></section>
+      <section class="panel"><div class="panel-head"><h2>Adversários mais perigosos</h2><span class="muted small">saldo contra a KNY</span></div><div class="tbl-wrap"><table id="scAdv" class="sct"></table></div></section>
+    </div>
+  </div>
 
   <div class="scoreboard" id="scoreboard"></div>
 
@@ -479,7 +516,7 @@ function currentRound(){ const now=Date.now();
   const live=SCHED.find(s=>now>=s.start&&now<s.end); if(live) return live.rd;
   const nx=SCHED.find(s=>s.start>now); return nx?nx.rd:ROUNDS[ROUNDS.length-1]; }
 
-function renderAll(){ renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
+function renderAll(){ if(typeof renderScout==="function"&&canWrite) renderScout(); renderScoreboard(); renderStandings(); renderRounds(); renderKnyNext(); renderFull(); renderAthletes(); renderAdj(); renderSel(true); }
 
 function renderScoreboard(){
   $("scoreboard").innerHTML=standings().map((x,i)=>`<div class="team ${x.id==="KNY"?"kny":""}"><span class="pos">${i+1}º</span><span class="name">${esc(TN[x.id])}</span><span class="pts">${x.tot}</span><span class="sub">${x.v}V · ${x.j}/80 jogos${x.bon?` · ${x.bon>0?"+":""}${x.bon} bônus`:""}</span></div>`).join("");
@@ -773,6 +810,88 @@ $("impGo").addEventListener("click",async()=>{
   }catch(err){ const m=$("impMsg"); m.hidden=false; m.className="hint bad"; m.textContent="Não consegui importar: "+(err&&err.code||"erro"); $("impGo").disabled=false; }
 });
 
+/* ===== Scouts KNY (só administradores) ===== */
+let SC_SORT={k:"saldo",d:-1}, SC_MOD="", SC_OPEN=null;
+const pct=(a,b)=>b?Math.round(100*a/b):0;
+const sg=n=>n>0?"+"+n:String(n);
+const hhmm=s=>`${s.start<Date.parse("2026-11-14T00:00:00-03:00")?"sex":"sáb"} ${s.ini}`;
+function scoutData(){
+  const games=SCHED.filter(s=>s.a==="KNY"||s.b==="KNY");
+  const A={}, P={}, C={}, O={}, ADV={};
+  const ath=n=>A[n]||(A[n]={n,esc:0,j:0,v:0,e:0,d:0,gp:0,gc:0,p:0,b:0,log:[],sched:[]});
+  for(const c of CATS) C[c.id]={j:0,v:0,e:0,d:0,gp:0,gc:0,tot:0};
+  for(const t of TEAMS) if(t.id!=="KNY") O[t.id]={j:0,v:0,e:0,d:0,gp:0,gc:0};
+  for(const s of games){
+    const k=kv(s), pair=pairOf(s.id)||[], played=has(s.id);
+    C[s.cat].tot++;
+    for(const n of pair){ const x=ath(n); x.esc++; x.sched.push(s); }
+    if(!played) continue;
+    const m=k.m, t=k.t, res=m>t?"v":m<t?"d":"e";
+    for(const o of [C[s.cat],O[k.opp]]){ o.j++; o[res]++; o.gp+=m; o.gc+=t; }
+    for(const n of pair){ const x=ath(n); x.j++; x[res]++; x.gp+=m; x.gc+=t; s.cat[0]==="P"?x.p++:x.b++;
+      x.log.push({s,m,t,res,par:pair.filter(y=>y!==n)[0]||"",opp:k.opp,adv:advOf(s.id,k.opp)}); }
+    if(pair.length===2){ const key=[...pair].sort((a,b)=>a.localeCompare(b,"pt")).join(" / "); const q=P[key]||(P[key]={key,cats:new Set(),j:0,v:0,e:0,d:0,gp:0,gc:0}); q.cats.add(CAT[s.cat].short); q.j++; q[res]++; q.gp+=m; q.gc+=t; }
+    for(const n of advOf(s.id,k.opp)){ const key=k.opp+"|"+n; const q=ADV[key]||(ADV[key]={n,team:k.opp,j:0,v:0,gp:0,gc:0}); q.j++; if(t>m)q.v++; q.gp+=t; q.gc+=m; }
+  }
+  for(const a of ROSTER) if(!OUT.has(a.n)) ath(a.n);
+  const now=Date.now(), alerts=[];
+  for(const x of Object.values(A)){
+    x.sched.sort((a,b)=>a.start-b.start);
+    x.next=x.sched.find(s=>s.end>now&&!has(s.id))||null;
+    x.rest=x.sched.filter(s=>!has(s.id)).length;
+    x.saldo=x.gp-x.gc; x.sj=x.j?+(x.saldo/x.j).toFixed(1):0; x.pv=pct(x.v,x.j); x.min=x.j*21;
+    const r=RN[x.n]; x.lv=r?[r.p!=null?"P"+r.p:"",r.b?"B"+r.b:""].filter(Boolean).join(" · "):"";
+    for(let i=1;i<x.sched.length;i++){ const a=x.sched[i-1], b=x.sched[i]; if(b.end<now) continue;
+      if(a.rd===b.rd) alerts.push({lv:"l",t:`${x.n} escalado(a) em 2 jogos na rodada ${a.rd} (${CAT[a.cat].short} e ${CAT[b.cat].short})`,o:a.start});
+      else if(b.start-a.end<=0) alerts.push({lv:"d",t:`${x.n} joga seguido: ${hhmm(a)} ${CAT[a.cat].short} → ${hhmm(b)} ${CAT[b.cat].short}`,o:a.start}); }
+    if(!x.esc&&RN[x.n]) alerts.push({lv:"m",t:`${x.n} não está escalado(a) em nenhum jogo`,o:9e15});
+  }
+  alerts.sort((a,b)=>a.o-b.o);
+  return {A:Object.values(A),P:Object.values(P),C,O,ADV:Object.values(ADV),alerts,games};
+}
+function bar(p,cls){ return `<span class="scbar"><i class="${cls||""}" style="width:${Math.max(0,Math.min(100,p))}%"></i></span>`; }
+function renderScout(){
+  const box=$("scoutView"); if(!box||box.hidden) return;
+  const D=scoutData(), T=D.games.filter(s=>has(s.id));
+  let v=0,e=0,d=0,gp=0,gc=0; for(const s of T){const k=kv(s); gp+=k.m; gc+=k.t; k.m>k.t?v++:k.m<k.t?d++:e++;}
+  $("scKpi").innerHTML=[["Jogos",`${T.length}<small>/${D.games.length}</small>`],["V · E · D",`${v} · ${e} · ${d}`],["Aproveitamento",`${pct(v,T.length)}%`],["Games pró",gp],["Games contra",gc],["Saldo",sg(gp-gc)],["Média por jogo",T.length?(gp/T.length).toFixed(1):"–"]]
+    .map(([l,x])=>`<div class="kpi"><span>${l}</span><b>${x}</b></div>`).join("");
+  // atletas
+  let rows=D.A.filter(x=>!SC_MOD||(SC_MOD==="p"?x.sched.some(s=>s.cat[0]==="P"):x.sched.some(s=>s.cat[0]==="B")));
+  const k=SC_SORT.k; rows.sort((a,b)=>{const x=a[k],y=b[k]; return (typeof x==="string"?x.localeCompare(y,"pt"):(x-y))*SC_SORT.d||b.j-a.j||a.n.localeCompare(b.n,"pt");});
+  const cols=[["n","Atleta"],["esc","Escalado"],["j","Jogou"],["v","V"],["d","D"],["pv","% V"],["gp","GP"],["gc","GC"],["saldo","Saldo"],["sj","Saldo/j"],["min","Min"],["rest","Faltam"]]; const HM=new Set(["esc","gp","gc","sj","min","rest"]);
+  $("scAth").innerHTML=`<thead><tr>${cols.map(([c,l])=>`<th class="${c==="n"?"":"r"} srt${HM.has(c)?" hm":""}" data-sk="${c}">${l}${SC_SORT.k===c?(SC_SORT.d<0?" ▾":" ▴"):""}</th>`).join("")}<th class="hm">Próximo</th></tr></thead><tbody>`+
+    rows.map(x=>{ const op=SC_OPEN===x.n;
+      return `<tr class="click${op?" open":""}" data-ath="${esc(x.n)}"><td><b>${esc(x.n)}</b> <span class="muted small">${esc(x.lv)}</span></td><td class="r hm">${x.esc}</td><td class="r">${x.j}</td><td class="r">${x.v}</td><td class="r">${x.d}</td><td class="r">${x.j?x.pv+"%":"–"}</td><td class="r hm">${x.gp}</td><td class="r hm">${x.gc}</td><td class="r ${x.saldo>0?"pos":x.saldo<0?"neg":""}">${x.j?sg(x.saldo):"–"}</td><td class="r hm">${x.j?sg(x.sj):"–"}</td><td class="r hm">${x.min}</td><td class="r hm">${x.rest}</td><td class="small hm">${x.next?`${hhmm(x.next)} · ${esc(CAT[x.next.cat].short)}`:"–"}</td></tr>`+
+      (op?`<tr class="xrow"><td colspan="13">${x.log.length?`<table class="sclog"><thead><tr><th>Quando</th><th class="hm">Categoria</th><th>Parceiro(a)</th><th>Adversário</th><th class="c">Placar</th></tr></thead><tbody>${x.log.map(g=>`<tr><td>${hhmm(g.s)}<div class="muted small sm">${esc(CAT[g.s.cat].short)}</div></td><td class="hm">${esc(CAT[g.s.cat].short)}</td><td>${esc(g.par)}</td><td>${esc(TN[g.opp])}${g.adv.length?`<div class="muted small">${esc(g.adv.join(" / "))}</div>`:""}</td><td class="c"><span class="res ${g.res==="v"?"w":g.res==="d"?"l":"d"}">${g.m} × ${g.t}</span></td></tr>`).join("")}</tbody></table>`:`<div class="muted small">Ainda sem jogos com placar.</div>`}
+        ${x.rest?`<div class="muted small" style="margin-top:6px">Ainda vai jogar: ${x.sched.filter(s=>!has(s.id)).map(s=>`${hhmm(s)} ${CAT[s.cat].short}`).join(" · ")}</div>`:""}</td></tr>`:"");}).join("")+"</tbody>";
+  // categorias
+  $("scCat").innerHTML=`<thead><tr><th>Categoria</th><th class="r">J</th><th class="r">V-E-D</th><th class="r">GP</th><th class="r">GC</th><th class="r">Saldo</th><th>Aproveitamento</th></tr></thead><tbody>`+
+    CATS.map(c=>{const o=D.C[c.id]; return `<tr><td><span class="mod ${c.mod}"></span>${esc(c.short)}</td><td class="r">${o.j}/${o.tot}</td><td class="r">${o.v}-${o.e}-${o.d}</td><td class="r">${o.gp}</td><td class="r">${o.gc}</td><td class="r ${o.gp>o.gc?"pos":o.gp<o.gc?"neg":""}">${o.j?sg(o.gp-o.gc):"–"}</td><td>${o.j?bar(pct(o.v,o.j))+` <span class="small">${pct(o.v,o.j)}%</span>`:"–"}</td></tr>`;}).join("")+"</tbody>";
+  // adversários (equipes)
+  $("scOpp").innerHTML=`<thead><tr><th>Contra</th><th class="r">J</th><th class="r">V-E-D</th><th class="r">Saldo</th><th>Aproveitamento</th></tr></thead><tbody>`+
+    Object.entries(D.O).map(([t,o])=>`<tr><td>${esc(TN[t])}</td><td class="r">${o.j}</td><td class="r">${o.v}-${o.e}-${o.d}</td><td class="r ${o.gp>o.gc?"pos":o.gp<o.gc?"neg":""}">${o.j?sg(o.gp-o.gc):"–"}</td><td>${o.j?bar(pct(o.v,o.j))+` <span class="small">${pct(o.v,o.j)}%</span>`:"–"}</td></tr>`).join("")+"</tbody>";
+  // duplas
+  const P=D.P.sort((a,b)=>(b.gp-b.gc)-(a.gp-a.gc)||b.j-a.j);
+  $("scPairs").innerHTML=P.length?`<thead><tr><th>Dupla</th><th>Categoria</th><th class="r">J</th><th class="r">V-E-D</th><th class="r">Saldo</th></tr></thead><tbody>`+
+    P.map(q=>`<tr><td>${esc(q.key)}</td><td class="small">${esc([...q.cats].join(", "))}</td><td class="r">${q.j}</td><td class="r">${q.v}-${q.e}-${q.d}</td><td class="r ${q.gp>q.gc?"pos":q.gp<q.gc?"neg":""}">${sg(q.gp-q.gc)}</td></tr>`).join("")+"</tbody>"
+    :`<tbody><tr><td class="muted">Aparece quando houver jogos da KNY com placar.</td></tr></tbody>`;
+  // atletas adversários
+  const AD=D.ADV.sort((a,b)=>(b.gp-b.gc)-(a.gp-a.gc)||b.v-a.v).slice(0,15);
+  $("scAdv").innerHTML=AD.length?`<thead><tr><th>Atleta</th><th>Equipe</th><th class="r">J × KNY</th><th class="r">V</th><th class="r">Saldo × KNY</th></tr></thead><tbody>`+
+    AD.map(q=>`<tr><td>${esc(q.n)}</td><td class="small">${esc(TN[q.team])}</td><td class="r">${q.j}</td><td class="r">${q.v}</td><td class="r ${q.gp>q.gc?"neg":q.gp<q.gc?"pos":""}">${sg(q.gp-q.gc)}</td></tr>`).join("")+"</tbody>"
+    :`<tbody><tr><td class="muted" style="white-space:normal">Registre a dupla adversária nos jogos (toque na dupla nas sugestões) para montar este ranking.</td></tr></tbody>`;
+  // alertas
+  $("scAlerts").innerHTML=D.alerts.length?D.alerts.slice(0,30).map(a=>`<li class="al ${a.lv}">${esc(a.t)}</li>`).join(""):`<li class="muted">Nenhum alerta para os próximos jogos.</li>`;
+}
+function setTab(t){ const sc=t==="scout"&&canWrite; document.body.classList.toggle("scouting",sc); $("scoutView").hidden=!sc;
+  for(const b of document.querySelectorAll("#tabs button")) b.classList.toggle("on",b.dataset.tab===(sc?"scout":"main"));
+  if(sc){ renderScout(); window.scrollTo({top:0}); } }
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]"); if(b) setTab(b.dataset.tab);});
+$("scAth").addEventListener("click",e=>{ const h=e.target.closest("th[data-sk]"); if(h){ const k=h.dataset.sk; SC_SORT={k,d:SC_SORT.k===k?-SC_SORT.d:(k==="n"?1:-1)}; renderScout(); return; }
+  const r=e.target.closest("tr[data-ath]"); if(r){ SC_OPEN=SC_OPEN===r.dataset.ath?null:r.dataset.ath; renderScout(); } });
+$("scMod").addEventListener("change",e=>{SC_MOD=e.target.value; renderScout();});
+
 function applyAuth(){
   const email=(me&&me.email||"").toLowerCase();
   canWrite=!!email&&EDITORS.map(e=>e.toLowerCase()).includes(email);
@@ -782,6 +901,7 @@ function applyAuth(){
   $("adjForm").hidden=!canWrite;
   $("formH").textContent=canWrite?"Lançar resultado":"Jogo selecionado";
   $("importPanel").hidden=!canWrite;
+  $("tabs").hidden=!canWrite; if(!canWrite) setTab("main");
   const isOwner=!!email&&email===OWNER.toLowerCase();
   renderAll();
 }
