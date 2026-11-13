@@ -5,38 +5,49 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Maratona das Raquetes 2026</title>
+<meta name="theme-color" content="#F37A1F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23F37A1F%27/%3E%3Cpath d=%27M14 12L32 36L50 12Z%27 fill=%27%23141414%27 stroke=%27%23141414%27 stroke-width=%2710%27 stroke-linejoin=%27round%27/%3E%3Crect x=%2726%27 y=%2730%27 width=%2712%27 height=%2726%27 rx=%276%27 fill=%27%23141414%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: placar no topo; "agora na quadra" + lançamento; classificação; grade KNY; tabela completa; validador; cronograma. Uma coluna no celular. */
 :root{
-  --bg:#eef2f4; --surface:#ffffff; --surface2:#e3e9ed; --line:#cdd6dc;
-  --fg:#13232d; --muted:#5b6b75;
-  --padel:#1d5c8f; --beach:#b9772a; --kny:#0e7a6a; --knysoft:#dcefeb;
-  --win:#1f8a4c; --loss:#b4413a; --draw:#8a7a2a;
-  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --bg:#FBF4EE; --surface:#ffffff; --surface2:#F6E9DD; --line:#EADBCD;
+  --fg:#141414; --muted:#6E625A;
+  --brand:#F37A1F; --ink:#141414;
+  --padel:#1d5c8f; --beach:#13807A; --kny:#C2540A; --knysoft:#FFE8D6;
+  --win:#23845A; --loss:#C93A32; --draw:#8a7a2a;
+  --display:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f171c; --surface:#16222a; --surface2:#1e2d36; --line:#2c3d48;
-  --fg:#e3ebef; --muted:#93a4ae;
-  --padel:#5a9fd6; --beach:#e0a35a; --kny:#3cc3ad; --knysoft:#173a36;
+  --bg:#121110; --surface:#1C1A19; --surface2:#27231F; --line:#3A332E;
+  --fg:#F5EEE8; --muted:#B3A69C;
+  --padel:#5a9fd6; --beach:#4cc0b8; --kny:#F79A4F; --knysoft:#3A2414;
   --win:#4cc27e; --loss:#e3756d; --draw:#d2c063; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f171c; --surface:#16222a; --surface2:#1e2d36; --line:#2c3d48;
-  --fg:#e3ebef; --muted:#93a4ae;
-  --padel:#5a9fd6; --beach:#e0a35a; --kny:#3cc3ad; --knysoft:#173a36;
+  --bg:#121110; --surface:#1C1A19; --surface2:#27231F; --line:#3A332E;
+  --fg:#F5EEE8; --muted:#B3A69C;
+  --padel:#5a9fd6; --beach:#4cc0b8; --kny:#F79A4F; --knysoft:#3A2414;
   --win:#4cc27e; --loss:#e3756d; --draw:#d2c063; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
 .wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
-h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.01em;margin:0;text-wrap:balance}
 h1{font-size:2.1rem;line-height:1}
-h2{font-size:1.35rem;text-transform:uppercase;letter-spacing:.04em}
-h3{font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.08em}
+h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
 .muted{color:var(--muted)} .small{font-size:.78rem}
-header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 20px;align-items:center;background:var(--brand);color:var(--ink);border-radius:16px;padding:16px 20px}
+header .brandrow{display:flex;align-items:center;gap:16px;min-width:0}
+header .logo{width:112px;flex:none;display:block}
+header .eyebrow{color:var(--ink);opacity:.75}
+header h1{color:var(--ink)}
+header .status,header .status b,header .muted{color:var(--ink)!important}
+header .authbar button{background:var(--ink);color:#fff;border-color:var(--ink)}
+header .authbar button.link{background:none;color:var(--ink)}
+@media (max-width:640px){header{padding:16px}header .brandrow{flex-direction:column;align-items:flex-start;gap:10px}header .logo{width:96px}header h1{font-size:1.5rem}header .eyebrow{font-size:.62rem}}
 .status{font-size:.8rem;color:var(--muted)} .status b{color:var(--fg)}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
 @media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
@@ -46,11 +57,11 @@ section.panel{background:var(--surface);border:1px solid var(--line);border-radi
 .scoreboard{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 @media (max-width:640px){.scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.scoreboard .team:first-child{grid-column:1/-1}}
 .team{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.team.kny{border-color:var(--kny);box-shadow:inset 0 0 0 1px var(--kny)}
+.team.kny{background:var(--ink);border-color:var(--brand);color:#fff}.team.kny .pos,.team.kny .sub{color:#c9bdb3}
 .team .pos{font-family:var(--display);font-size:.95rem;color:var(--muted)}
 .team .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.team.kny .name{color:var(--kny)}
-.team .pts{font-family:var(--display);font-size:2.2rem;line-height:1;font-variant-numeric:tabular-nums}
+.team.kny .name{color:var(--brand)}
+.team .pts{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
 .team .sub{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
 
 /* cartões de jogo */
@@ -62,7 +73,7 @@ section.panel{background:var(--surface);border:1px solid var(--line);border-radi
 .match{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;min-width:0;background:var(--surface)}
 .match:focus-visible{outline:2px solid var(--kny);outline-offset:1px}
 .match:hover{border-color:var(--muted)}
-.match.kny{background:var(--knysoft);border-color:var(--kny)}
+.match.kny{background:var(--knysoft);border-color:var(--knysoft);box-shadow:inset 4px 0 0 var(--brand)}
 .match.sel{outline:2px solid var(--kny)}
 .match .top{display:flex;justify-content:space-between;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .match .top .p{color:var(--padel)} .match .top .b{color:var(--beach)}
@@ -187,10 +198,22 @@ body{margin:0}
 <body>
 <div class="wrap">
   <header>
-    <div>
+    <div class="brandrow"><svg class="logo" role="img" aria-label="KNY Padel Team" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 270" >
+<g fill="none" stroke="#141414" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+<path d="M48 40V190"/><path d="M152 40L62 115L152 190"/>
+<path d="M212 190V40L318 190V40"/>
+<path d="M382 40L442 128L502 40"/>
+</g>
+<path d="M382 40H502L442 128Z" fill="#141414" stroke="#141414" stroke-width="44" stroke-linejoin="round"/>
+<g fill="#F37A1F"><circle cx="412" cy="44" r="8"/><circle cx="442" cy="44" r="8"/><circle cx="472" cy="44" r="8"/><circle cx="427" cy="70" r="8"/><circle cx="457" cy="70" r="8"/><circle cx="442" cy="96" r="8"/></g>
+<rect x="420" y="118" width="44" height="118" rx="22" fill="#141414"/>
+<rect x="420" y="214" width="44" height="10" fill="#F37A1F" opacity=".35"/>
+<path d="M464 226c22 4 34 18 30 34" fill="none" stroke="#141414" stroke-width="7" stroke-linecap="round"/>
+<text x="26" y="252" font-family="Inter" font-weight="700" font-size="31" letter-spacing="9.5" fill="#141414">PADEL TEAM</text>
+</svg><div>
       <div class="eyebrow">Smart Sports Center · 13–14/11/2026 · 200 jogos em 50 rodadas</div>
       <h1>Maratona das Raquetes 2026</h1>
-    </div>
+    </div></div>
     <div class="authbar">
       <div class="status" id="status">Conectando ao placar…</div>
       <span class="muted small" id="who"></span>
@@ -212,7 +235,7 @@ body{margin:0}
         </div>
       </div>
       <div id="rounds" class="round"></div>
-      <div class="muted small">Toque num jogo para lançar o placar. Jogos da KNY ficam em verde.</div>
+      <div class="muted small">Toque num jogo para lançar o placar. Jogos da KNY ficam em laranja.</div>
     </section>
 
     <section class="panel" id="formPanel">
